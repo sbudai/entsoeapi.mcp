@@ -1,0 +1,19 @@
+# R
+.Rproj.user/
+.Rhistory
+.RData
+.Rcheck/
+*.Rcheck/
+*.tar.gz
+*.tgz
+
+# Environment (NEVER commit PAT)
+.Renviron
+.env
+
+# Docker build artifacts
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db

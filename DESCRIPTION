@@ -1,0 +1,23 @@
+Package: entsoeapi.mcp
+Title: MCP Server for the ENTSO-E Transparency Platform API
+Version: 0.1.0
+Authors@R: person("Sándor", "Budai", role = c("aut", "cre", "cph"),
+           email = "sbudai.ga@gmail.com")
+Description: Provides a Model Context Protocol (MCP) server that exposes
+    the 'entsoeapi' package as tools for LLM-enabled applications such as
+    Claude Desktop. Allows querying European electricity market, load,
+    generation, transmission, outages, and balancing data through natural
+    language.
+Depends: R (>= 4.2.0)
+Imports:
+    entsoeapi,
+    mcptools,
+    ellmer,
+    lubridate,
+    jsonlite
+License: MIT + file LICENSE
+URL: https://github.com/sbudai/entsoeapi.mcp
+BugReports: https://github.com/sbudai/entsoeapi.mcp/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
