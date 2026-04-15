@@ -6,6 +6,7 @@
 *.Rcheck/
 *.tar.gz
 *.tgz
+*.Rproj
 
 # Environment (NEVER commit PAT)
 .Renviron
@@ -13,7 +14,12 @@
 
 # Docker build artifacts
 .dockerignore
+build.log
 
 # OS
 .DS_Store
 Thumbs.db
+
+# AI
+.claude/
+.opencode/

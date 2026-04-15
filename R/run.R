@@ -15,10 +15,11 @@
 #'
 #' @export
 run <- function(session_tools = FALSE) {
-  invisible(mcptools::mcp_server(
-    tools         = lapply(all_tools(), mute_stdout_tool),
+  mcptools::mcp_server(
+    tools = lapply(X = all_tools(), FUN = mute_stdout_tool),
     session_tools = session_tools
-  ))
+  ) |>
+    invisible()
 }
 
 
@@ -36,13 +37,20 @@ run <- function(session_tools = FALSE) {
 #' original function already has the correct formals bound, so ... just forwards
 #' them. capture.output's on.exit always restores stdout even on error.
 #'
+#' @param tool_def description
+#'
+#' @return ...
+#'
 #' @noRd
 mute_stdout_tool <- function(tool_def) {
-  fn        <- tool_def          # capture the original ToolDef as a plain fn ref
+  # capture the original ToolDef as a plain fn ref
+  fn <- tool_def
   old_class <- class(tool_def)
-  old_attrs <- attributes(tool_def)   # S7 slots: class, S7_class, name, description, ...
 
-  wrapper <- function(...) {
+  # S7 slots: class, S7_class, name, description, ...
+  old_attrs <- attributes(tool_def)
+
+  wrapper <- \(...) {
     .result <- NULL
     capture.output(.result <- fn(...), type = "output")
     .result
@@ -55,8 +63,8 @@ mute_stdout_tool <- function(tool_def) {
   # body() replacement strips S7 class identity — restore all saved
   # attributes (skip srcref/srcfile/srcfilecopy which belong to the old body).
   src_attrs <- c("srcref", "srcfile", "srcfilecopy")
-  for (nm in setdiff(names(old_attrs), src_attrs)) {
-    attr(wrapper, nm) <- old_attrs[[nm]]
+  for (nm in base::setdiff(x = names(old_attrs), y = src_attrs)) {
+    attr(x = wrapper, which = nm) <- old_attrs[[nm]]
   }
   class(wrapper) <- old_class
   wrapper
@@ -64,6 +72,8 @@ mute_stdout_tool <- function(tool_def) {
 
 
 #' Collect all tool objects into a list
+#'
+#' @return a list of accessible tools
 #'
 #' @noRd
 all_tools <- function() {
