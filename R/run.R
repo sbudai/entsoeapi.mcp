@@ -15,10 +15,51 @@
 #'
 #' @export
 run <- function(session_tools = FALSE) {
-  mcptools::mcp_server(
-    tools         = all_tools(),
+  invisible(mcptools::mcp_server(
+    tools         = lapply(all_tools(), mute_stdout_tool),
     session_tools = session_tools
-  )
+  ))
+}
+
+
+#' Wrap a ToolDef so that any stdout printed during the call is discarded.
+#'
+#' entsoeapi::api_req() calls httr2::req_verbose(header_resp = TRUE) on every
+#' request. httr2's verbose callback uses cat() which writes HTTP response
+#' headers to R's stdout connection — the same pipe used by the MCP stdio
+#' transport. Claude Desktop then receives lines like "<- x-content-type: ..."
+#' interleaved with JSON-RPC, which fails JSON parsing.
+#'
+#' Fix: build a new wrapper function that calls the original via fn(...) inside
+#' capture.output, then copy the original formals and restore all S7 attributes.
+#' Using fn(...) avoids bquote body-substitution scoping issues entirely — the
+#' original function already has the correct formals bound, so ... just forwards
+#' them. capture.output's on.exit always restores stdout even on error.
+#'
+#' @noRd
+mute_stdout_tool <- function(tool_def) {
+  fn        <- tool_def          # capture the original ToolDef as a plain fn ref
+  old_class <- class(tool_def)
+  old_attrs <- attributes(tool_def)   # S7 slots: class, S7_class, name, description, ...
+
+  wrapper <- function(...) {
+    .result <- NULL
+    capture.output(.result <- fn(...), type = "output")
+    .result
+  }
+
+  # NOTE: we intentionally do NOT replace formals(wrapper). mcptools builds the
+  # JSON schema from the S7 `arguments` attribute (restored below), not from R
+  # formals. fn(...) forwards all named arguments from Claude Desktop correctly.
+
+  # body() replacement strips S7 class identity — restore all saved
+  # attributes (skip srcref/srcfile/srcfilecopy which belong to the old body).
+  src_attrs <- c("srcref", "srcfile", "srcfilecopy")
+  for (nm in setdiff(names(old_attrs), src_attrs)) {
+    attr(wrapper, nm) <- old_attrs[[nm]]
+  }
+  class(wrapper) <- old_class
+  wrapper
 }
 
 
