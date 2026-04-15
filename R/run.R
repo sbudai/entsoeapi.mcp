@@ -85,22 +85,12 @@ all_tools <- function() {
     tool_resource_object_eic,
     tool_get_news,
 
-    # Load
-    tool_load_actual_total,
-    tool_load_day_ahead_total_forecast,
-    tool_load_week_ahead_total_forecast,
-    tool_load_month_ahead_total_forecast,
-    tool_load_year_ahead_total_forecast,
-    tool_load_year_ahead_forecast_margin,
+    # Load (merged: actual, day_ahead, week_ahead, month_ahead, year_ahead, margin)
+    tool_load,
 
-    # Generation
-    tool_gen_per_prod_type,
-    tool_gen_installed_capacity_per_pt,
-    tool_gen_installed_capacity_per_pu,
-    tool_gen_wind_solar_forecasts,
-    tool_gen_day_ahead_forecast,
-    tool_gen_per_gen_unit,
-    tool_gen_storage_mean_filling_rate,
+    # Generation (merged: time-series + capacity)
+    tool_gen_time_series,
+    tool_gen_capacity,
 
     # Market
     tool_energy_prices,

@@ -1,74 +1,4 @@
 # ============================================================
-# Shared Description Constants (token optimization)
-# ============================================================
-
-#' Common argument descriptions - defined once, reused everywhere.
-#'
-#' This reduces token usage by avoiding repetition across 30+ tools.
-#' These constants are used internally for tool descriptions.
-#'
-#' @keywords internal
-#' @export
-desc_eic <- "EIC code of the bidding zone."
-
-#' @keywords internal
-#' @export
-desc_eic_in <- "EIC code of the importing bidding zone."
-
-#' @keywords internal
-#' @export
-desc_eic_out <- "EIC code of the exporting bidding zone."
-
-#' @keywords internal
-#' @export
-desc_period_start <- "Start date in YYYY-MM-DD format (CET)."
-
-#' @keywords internal
-#' @export
-desc_period_end <- "End date in YYYY-MM-DD format (CET)."
-
-#' @keywords internal
-#' @export
-desc_year <- "Year as integer, e.g. 2024."
-
-#' @keywords internal
-#' @export
-desc_gen_type <- "Optional ENTSO-E production type code, e.g. 'B01' (Biomass), 'B16' (Solar)."
-
-#' @keywords internal
-#' @export
-desc_psr_type <- "Optional PSR type code, e.g. 'B16' for Solar PV."
-
-#' @keywords internal
-#' @export
-desc_contract_type_da <- "Contract type: 'A01' Day ahead (default), 'A07' Intraday."
-
-#' @keywords internal
-#' @export
-desc_doc_status <- "Document status: 'A05' active, 'A09' cancelled, 'A13' withdrawn."
-
-#' @keywords internal
-#' @export
-desc_event_nature <- "Event nature: 'A53' planned, 'A54' unplanned."
-
-#' @keywords internal
-#' @export
-desc_n <- "Number of items to return."
-
-#' Common tool description suffixes.
-#'
-#' These constants are used internally for building tool descriptions.
-#'
-#' @keywords internal
-#' @export
-suffix_max_1yr <- "Max 1-year range."
-
-#' @keywords internal
-#' @export
-suffix_use_area_eic <- "Use area_eic() to find EIC codes."
-
-
-# ============================================================
 # Date Parsing
 # ============================================================
 
@@ -89,7 +19,7 @@ parse_date <- function(ts, tz = "CET") {
 #' Drop constant metadata columns from a tidy time-series data frame.
 #'
 #' entsoeapi tidy output repeats domain names, currency codes, and unit labels
-#' on every row. Removing them can cut JSON payload size by 50%+ with no loss
+#' on every row. Removing them can cut CSV payload size by 50%+ with no loss
 #' of information (the LLM already knows the query context).
 #'
 #' Columns are dropped only when: (a) every non-NA value is identical, AND
@@ -105,7 +35,7 @@ parse_date <- function(ts, tz = "CET") {
 slim_ts <- function(
   df,
   keep_pattern = paste(
-    "eic", "mrid", "code", "name", "start", "end", "position", "price",
+    "eic", "name", "start", "end", "position", "price",
     "quantity", "amount", "value", "rate", "type", sep = "|"
   )
 ) {
@@ -129,25 +59,38 @@ slim_ts <- function(
 }
 
 
-#' Serialise a data frame to JSON, slimming and capping rows to avoid
+#' Serialise a data frame to CSV, slimming and capping rows to avoid
 #' overwhelming the LLM context window.
 #'
-#' @param df a dataframe to convert to JSON
-#' @param max_rows how many rows of the dataframe to convert to JSON
+#' Compared with JSON, CSV omits repeated column keys on every row, typically
+#' reducing output size 60-70% for wide time-series data frames. A truncation
+#' notice is appended when rows are dropped so the LLM knows data is partial.
 #'
-#' @return JSON string
+#' @param df a dataframe to convert to CSV
+#' @param max_rows how many rows of the dataframe to include
+#'
+#' @return a CSV string; falls back to JSON for non-data-frame inputs
 #'
 #' @noRd
-safe_to_json <- function(df, max_rows = 100L) {
-  if (is.null(df) || (is.data.frame(df) && nrow(df) == 0L)) return("[]")
+safe_to_csv <- function(df, max_rows = 100L) {
+  if (is.null(df) || (is.data.frame(df) && nrow(df) == 0L)) return("(no data)")
   if (is.data.frame(df)) {
+    total_rows <- nrow(df)
     df <- slim_ts(df)
-    if (nrow(df) > max_rows) df <- df[seq_len(max_rows), ]
+    truncated <- nrow(df) > max_rows
+    if (truncated) df <- df[seq_len(max_rows), ]
+    out <- paste(
+      utils::capture.output(utils::write.csv(df, stdout(), row.names = FALSE)),
+      collapse = "\n"
+    )
+    if (truncated) {
+      out <- paste0(
+        out,
+        "\n# truncated: showing ", max_rows, " of ", total_rows, " rows"
+      )
+    }
+    return(out)
   }
-  jsonlite::toJSON(
-    x = df,
-    auto_unbox = TRUE,
-    date_format = "ISO8601",
-    na = "null"
-  )
+  # Fallback for non-data-frame results (e.g. nested lists)
+  jsonlite::toJSON(df, auto_unbox = TRUE, date_format = "ISO8601", na = "null")
 }
