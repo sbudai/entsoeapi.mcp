@@ -2,44 +2,84 @@
 # EIC Lookup Tools (no date params)
 # ============================================================
 
+# Helper: keep only identification-relevant columns and filter rows by a query string.
+# Drops rarely-needed metadata (postal_code, vat_code, parent, responsible_party, status)
+# to reduce context window usage.
+.eic_filter <- function(df, query) {
+  key_cols <- c("eic_code", "eic_display_name", "eic_long_name",
+                "market_participant_iso_country_code", "eic_type_function_list")
+  df <- df[, intersect(key_cols, names(df)), drop = FALSE]
+  if (!is.null(query) && nchar(trimws(query)) > 0L) {
+    mask <- apply(df, 1L, function(row)
+      any(grepl(query, row, ignore.case = TRUE))
+    )
+    df <- df[mask, , drop = FALSE]
+  }
+  df
+}
+
 tool_area_eic <- ellmer::tool(
   name = "area_eic",
-  fun = function() {
-    entsoeapi::area_eic() |> safe_to_json()
+  fun = function(query = NULL) {
+    entsoeapi::area_eic() |> .eic_filter(query) |> safe_to_json(max_rows = 200L)
   },
-  description = "Return all Area Y EIC codes with display names and country codes.
-Call this first to resolve a country or bidding zone name to its EIC code before
-calling any data query tool.",
-  arguments = list()
+  description = "Return Area Y EIC codes (bidding zones, control areas, member states, etc.).
+Pass a query string to filter by country name, ISO code, or zone name (case-insensitive).
+IMPORTANT: Always display the full table of matches to the user and ask them to confirm
+which EIC code to use before querying data — many countries have multiple bidding zones.",
+  arguments = list(
+    query = ellmer::type_string(
+      "Optional filter string, e.g. 'Germany', 'DE', 'France', 'Bidding Zone'.
+Case-insensitive match against display name, long name, and country code.",
+      required = FALSE
+    )
+  )
 )
 
 tool_party_eic <- ellmer::tool(
   name = "party_eic",
-  fun = function() {
-    entsoeapi::party_eic() |> safe_to_json()
+  fun = function(query = NULL) {
+    entsoeapi::party_eic() |> .eic_filter(query) |> safe_to_json(max_rows = 200L)
   },
-  description = "Return all Party X EIC codes for market participants (TSOs, traders, etc.).",
-  arguments = list()
+  description = "Return Party X EIC codes for market participants (TSOs, traders, etc.).
+Pass a query string to filter by name or country code.",
+  arguments = list(
+    query = ellmer::type_string(
+      "Optional filter string, e.g. 'Germany', 'TSO', 'DE'. Case-insensitive.",
+      required = FALSE
+    )
+  )
 )
 
 tool_all_approved_eic <- ellmer::tool(
   name = "all_approved_eic",
-  fun = function() {
-    entsoeapi::all_approved_eic() |> safe_to_json()
+  fun = function(query = NULL) {
+    entsoeapi::all_approved_eic() |> .eic_filter(query) |> safe_to_json(max_rows = 200L)
   },
   description = "Return all approved EIC codes across all types (Area, Party, Tie-line,
-Resource Object, Substation, etc.) in one table. Slower than area_eic() alone.",
-  arguments = list()
+Resource Object, Substation, etc.) in one table. Slower than area_eic() alone.
+Pass a query string to filter results.",
+  arguments = list(
+    query = ellmer::type_string(
+      "Optional filter string, e.g. 'Germany', 'DE', 'Tie-line'. Case-insensitive.",
+      required = FALSE
+    )
+  )
 )
 
 tool_resource_object_eic <- ellmer::tool(
   name = "resource_object_eic",
-  fun = function() {
-    entsoeapi::resource_object_eic() |> safe_to_json()
+  fun = function(query = NULL) {
+    entsoeapi::resource_object_eic() |> .eic_filter(query) |> safe_to_json(max_rows = 200L)
   },
-  description = "Return all Resource Object W EIC codes — generation units and other
-resources that can produce or consume energy.",
-  arguments = list()
+  description = "Return Resource Object W EIC codes — generation units and other resources.
+Pass a query string to filter by plant name, country code, or fuel type.",
+  arguments = list(
+    query = ellmer::type_string(
+      "Optional filter string, e.g. 'wind', 'DE', 'nuclear'. Case-insensitive.",
+      required = FALSE
+    )
+  )
 )
 
 tool_get_news <- ellmer::tool(

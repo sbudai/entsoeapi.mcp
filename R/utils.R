@@ -11,7 +11,7 @@ parse_date <- function(x) {
 #' Serialise a data frame to JSON, capping rows to avoid overwhelming the LLM
 #'
 #' @noRd
-safe_to_json <- function(df, max_rows = 500L) {
+safe_to_json <- function(df, max_rows = 200L) {
   if (is.null(df) || (is.data.frame(df) && nrow(df) == 0L)) {
     return("[]")
   }
