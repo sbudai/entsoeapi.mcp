@@ -110,14 +110,15 @@ tool_load_actual_total <- ellmer::tool(
       period_start = parse_date(period_start),
       period_end   = parse_date(period_end),
       tidy_output  = TRUE
-    ) |> safe_to_json()
+    ) |>
+      safe_to_json()
   },
   description = "Get actual total load (6.1.A) for a bidding zone. Max 1-year range.
 Use area_eic() to find the EIC code for a country/zone.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone, e.g. '10Y1001A1001A83F' for Germany."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -129,13 +130,14 @@ tool_load_day_ahead_total_forecast <- ellmer::tool(
       period_start = parse_date(period_start),
       period_end   = parse_date(period_end),
       tidy_output  = TRUE
-    ) |> safe_to_json()
+    ) |>
+      safe_to_json()
   },
   description = "Get day-ahead total load forecast (6.1.B) for a bidding zone. Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -147,13 +149,14 @@ tool_load_week_ahead_total_forecast <- ellmer::tool(
       period_start = parse_date(period_start),
       period_end   = parse_date(period_end),
       tidy_output  = TRUE
-    ) |> safe_to_json()
+    ) |>
+      safe_to_json()
   },
   description = "Get week-ahead total load forecast (6.1.C) for a bidding zone. Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -170,8 +173,8 @@ tool_load_month_ahead_total_forecast <- ellmer::tool(
   description = "Get month-ahead total load forecast (6.1.D) for a bidding zone. Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -188,8 +191,8 @@ tool_load_year_ahead_total_forecast <- ellmer::tool(
   description = "Get year-ahead total load forecast (6.1.E) for a bidding zone. Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -206,8 +209,8 @@ tool_load_year_ahead_forecast_margin <- ellmer::tool(
   description = "Get year-ahead generation forecast margin (8.1) for a bidding zone. Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -231,8 +234,8 @@ tool_gen_per_prod_type <- ellmer::tool(
 Max 1-day range per call (internally paginated). Optionally filter by generation type code.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     gen_type     = ellmer::type_string(
       "Optional ENTSO-E production type code, e.g. 'B01' for Biomass, 'B16' for Solar.",
       required = FALSE
@@ -298,8 +301,8 @@ tool_gen_wind_solar_forecasts <- ellmer::tool(
 Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -317,8 +320,8 @@ tool_gen_day_ahead_forecast <- ellmer::tool(
 Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -338,8 +341,8 @@ Paginated internally to 1-day chunks. Optionally filter by generation type code.
 Note: This can be slow for long date ranges.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the control area."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     gen_type     = ellmer::type_string(
       "Optional ENTSO-E production type code, e.g. 'B02' for Brown coal.",
       required = FALSE
@@ -361,8 +364,8 @@ tool_gen_storage_mean_filling_rate <- ellmer::tool(
 for a bidding zone. Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -387,8 +390,8 @@ Max 1-year range. contract_type: 'A01' = Day ahead (default), 'A07' = Intraday.
 Use area_eic() to find the EIC code.",
   arguments = list(
     eic           = ellmer::type_string("EIC code of the bidding zone."),
-    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     contract_type = ellmer::type_string(
       "Contract type: 'A01' for Day ahead (default), 'A07' for Intraday.",
       required = FALSE
@@ -410,8 +413,8 @@ tool_intraday_prices <- ellmer::tool(
 the intraday contract type. Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -433,8 +436,8 @@ Use area_eic() to find EIC codes for both zones.",
   arguments = list(
     eic_in        = ellmer::type_string("EIC code of the importing bidding zone."),
     eic_out       = ellmer::type_string("EIC code of the exporting bidding zone."),
-    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     contract_type = ellmer::type_string(
       "Contract type: 'A02' Day ahead (default), 'A03' Intraday, 'A04' Week ahead.",
       required = FALSE
@@ -458,8 +461,8 @@ Max 1-year range. Use area_eic() to find EIC codes.",
   arguments = list(
     eic_in       = ellmer::type_string("EIC code of the importing bidding zone."),
     eic_out      = ellmer::type_string("EIC code of the exporting bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -480,8 +483,8 @@ contract_type: 'A01' = Day ahead (default).",
   arguments = list(
     eic_in        = ellmer::type_string("EIC code of the importing bidding zone."),
     eic_out       = ellmer::type_string("EIC code of the exporting bidding zone."),
-    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     contract_type = ellmer::type_string(
       "Contract type, default 'A01' (Day ahead).",
       required = FALSE
@@ -504,8 +507,8 @@ tool_flow_based_allocations <- ellmer::tool(
 process_type: 'A43' = Day ahead (default), 'A32' = Intraday.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone (CWE/Core region)."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     process_type = ellmer::type_string(
       "Process type: 'A43' Day ahead (default), 'A32' Intraday.",
       required = FALSE
@@ -528,8 +531,8 @@ tool_congestion_income <- ellmer::tool(
 contract_type: 'A01' = Day ahead (default).",
   arguments = list(
     eic           = ellmer::type_string("EIC code of the bidding zone."),
-    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     contract_type = ellmer::type_string(
       "Contract type, default 'A01' (Day ahead).",
       required = FALSE
@@ -556,8 +559,8 @@ auction_category: 'A01' Annual, 'A02' Monthly, 'A03' Weekly, 'A04' Daily (defaul
   arguments = list(
     eic_in           = ellmer::type_string("EIC code of the importing bidding zone."),
     eic_out          = ellmer::type_string("EIC code of the exporting bidding zone."),
-    period_start     = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end       = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start     = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end       = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     contract_type    = ellmer::type_string(
       "Contract type, default 'A01' (Day ahead).",
       required = FALSE
@@ -590,8 +593,8 @@ Max 1-year range. Use area_eic() to find EIC codes.",
   arguments = list(
     eic_in       = ellmer::type_string("EIC code of the importing bidding zone."),
     eic_out      = ellmer::type_string("EIC code of the exporting bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -611,8 +614,8 @@ Max 1-year range.",
   arguments = list(
     eic_in       = ellmer::type_string("EIC code of the importing bidding zone."),
     eic_out      = ellmer::type_string("EIC code of the exporting bidding zone."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -631,8 +634,8 @@ tool_net_positions <- ellmer::tool(
 contract_type: 'A01' = Day ahead (default), 'A07' = Intraday. Max 1-year range.",
   arguments = list(
     eic           = ellmer::type_string("EIC code of the bidding zone."),
-    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start  = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end    = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     contract_type = ellmer::type_string(
       "Contract type: 'A01' Day ahead (default), 'A07' Intraday.",
       required = FALSE
@@ -658,8 +661,8 @@ market_agreement_type: 'A01' = Day ahead (default), 'A02' = Total capacity.",
   arguments = list(
     eic_in                = ellmer::type_string("EIC code of the importing bidding zone."),
     eic_out               = ellmer::type_string("EIC code of the exporting bidding zone."),
-    period_start          = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end            = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start          = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end            = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     market_agreement_type = ellmer::type_string(
       "Market agreement type: 'A01' Day ahead (default), 'A02' Total capacity.",
       required = FALSE
@@ -690,8 +693,8 @@ Max 1-year range. doc_status: 'A05' active, 'A09' cancelled, 'A13' withdrawn (NU
 event_nature: 'A53' planned, 'A54' unplanned (NULL = both).",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone or control area."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     doc_status   = ellmer::type_string(
       "Document status filter: 'A05' active, 'A09' cancelled, 'A13' withdrawn.",
       required = FALSE
@@ -721,8 +724,8 @@ Max 1-year range. doc_status: 'A05' active, 'A09' cancelled, 'A13' withdrawn.
 event_nature: 'A53' planned, 'A54' unplanned.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the bidding zone or control area."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     doc_status   = ellmer::type_string(
       "Document status filter: 'A05' active, 'A09' cancelled, 'A13' withdrawn.",
       required = FALSE
@@ -755,8 +758,8 @@ event_nature: 'A53' planned, 'A54' unplanned.",
   arguments = list(
     eic_in       = ellmer::type_string("EIC code of the importing side of the affected border."),
     eic_out      = ellmer::type_string("EIC code of the exporting side of the affected border."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     doc_status   = ellmer::type_string(
       "Document status filter: 'A05' active, 'A09' cancelled, 'A13' withdrawn.",
       required = FALSE
@@ -787,8 +790,8 @@ tool_imbalance_prices <- ellmer::tool(
 Use area_eic() to find the EIC code.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the scheduling/control area."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -805,8 +808,8 @@ tool_imbalance_volumes <- ellmer::tool(
   description = "Get imbalance volumes (17.1.C) for a scheduling area. Max 1-year range.",
   arguments = list(
     eic          = ellmer::type_string("EIC code of the scheduling/control area."),
-    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone).")
+    period_start = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end   = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation.")
   )
 )
 
@@ -832,8 +835,8 @@ process_type (optional): 'A46' FCR, 'A47' mFRR, 'A51' aFRR, 'A52' RR.",
     market_agreement_type = ellmer::type_string(
       "Required. Agreement type: 'A01' Daily, 'A02' Weekly, 'A03' Monthly, 'A04' Yearly, 'A06' Long-term, 'A13' Intraday."
     ),
-    period_start          = ellmer::type_string("Start date in YYYY-MM-DD format (CET timezone)."),
-    period_end            = ellmer::type_string("End date in YYYY-MM-DD format (CET timezone)."),
+    period_start          = ellmer::type_string("Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible — data is at 15-min to 1-hour resolution and results are capped at 100 rows."),
+    period_end            = ellmer::type_string("End date in YYYY-MM-DD format (CET). Results are capped at 100 rows — use a short range to avoid truncation."),
     process_type          = ellmer::type_string(
       "Optional reserve type: 'A46' FCR, 'A47' mFRR, 'A51' aFRR, 'A52' RR.",
       required = FALSE
