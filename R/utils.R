@@ -1,18 +1,18 @@
-# ============================================================
-# Date Parsing
-# ============================================================
-
 #' Parse a date string to a CET-timezone POSIXct
 #'
-#' @param ts Accepts YYYY-MM-DD strings (and passes POSIXct through unchanged)
-#' @param tz timezone
+#' @param ts A date string in `"YYYY-MM-DD"` format, or a `POSIXct` object
+#'   (passed through unchanged).
+#' @param tz Time zone string passed to `lubridate::ymd()`; defaults to
+#'   `"CET"`.
+#'
+#' @importFrom lubridate ymd
 #'
 #' @return a vector of class POSIXct
 #'
 #' @noRd
 parse_date <- function(ts, tz = "CET") {
   if (inherits(x = ts, what = "POSIXct")) return(ts)
-  lubridate::ymd(ts, tz = tz)
+  ymd(ts, tz = tz)
 }
 
 
@@ -29,7 +29,7 @@ parse_date <- function(ts, tz = "CET") {
 #' @param keep_pattern patterns for columns that are always informative
 #'   even when constant
 #'
-#' @return the dataframe without informative constant columns
+#' @return the dataframe without uninformative constant columns
 #'
 #' @noRd
 slim_ts <- function(
@@ -69,6 +69,9 @@ slim_ts <- function(
 #' @param df a dataframe to convert to CSV
 #' @param max_rows how many rows of the dataframe to include
 #'
+#' @importFrom utils capture.output write.csv
+#' @importFrom jsonlite toJSON
+#'
 #' @return a CSV string; falls back to JSON for non-data-frame inputs
 #'
 #' @noRd
@@ -80,7 +83,7 @@ safe_to_csv <- function(df, max_rows = 100L) {
     truncated <- nrow(df) > max_rows
     if (truncated) df <- df[seq_len(max_rows), ]
     out <- paste(
-      utils::capture.output(utils::write.csv(df, stdout(), row.names = FALSE)),
+      capture.output(write.csv(x = df, file = stdout(), row.names = FALSE)),
       collapse = "\n"
     )
     if (truncated) {
@@ -92,5 +95,5 @@ safe_to_csv <- function(df, max_rows = 100L) {
     return(out)
   }
   # Fallback for non-data-frame results (e.g. nested lists)
-  jsonlite::toJSON(df, auto_unbox = TRUE, date_format = "ISO8601", na = "null")
+  toJSON(df, auto_unbox = TRUE, date_format = "ISO8601", na = "null")
 }
