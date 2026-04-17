@@ -17,6 +17,8 @@ Imports:
     jsonlite
 Suggests:
     testthat (>= 3.0.0)
+Remotes:
+    krose/entsoeapi
 License: MIT + file LICENSE
 URL: https://github.com/sbudai/entsoeapi.mcp
 BugReports: https://github.com/sbudai/entsoeapi.mcp/issues

@@ -85,7 +85,7 @@ docker pull sbudai/entsoeapi.mcp:latest
 
 Or build from source (see [Building from source](#building-from-source) below).
 
-### Step 3 — Configure MCP server settings of Claude Desktop
+### Step 3 — Configure MCP server settings of Claude Desktop 
 
 Open (or create) your Claude Desktop config file:
 
@@ -99,11 +99,7 @@ Add the `entsoe` entry under `"mcpServers"`:
   "mcpServers": {
     "entsoe": {
       "command": "docker",
-      "args": [
-        "run", "--rm", "-i",
-        "-e", "ENTSOE_PAT",
-        "sbudai/entsoeapi.mcp:latest"
-      ],
+      "args": ["run", "--rm", "-i", "-e", "ENTSOE_PAT", "sbudai/entsoeapi.mcp:latest"],
       "env": {
         "ENTSOE_PAT": "your-entsoe-api-token-here"
       }
@@ -112,11 +108,11 @@ Add the `entsoe` entry under `"mcpServers"`:
 }
 ```
 
-Key flags:\
-- `--rm` — removes the container when the session ends (no container accumulation)\
-- `-i` — keeps stdin open, required for MCP stdio transport\
-- `-e ENTSOE_PAT` — forwards the token from Claude Desktop into the container\
-- No `-t` — TTY mode would corrupt the JSON-RPC stream
+Key flags:
+
+-   `--rm` — removes the container when the session ends (no container accumulation)
+-   `-i` — keeps stdin open, required for MCP stdio transport
+-   `-e ENTSOE_PAT` — forwards the token from Claude Desktop into the container
 
 ### Step 4 — Restart Claude Desktop and verify
 
@@ -149,7 +145,7 @@ All tools return results as CSV (with a truncation notice if capped at 100 rows)
 One tool with a `type` parameter:
 
 | `type` value         | ENTSO-E dataset | Description                           |
-|--------------------|------------------|-----------------------------------|
+|--------------------|------------------|----------------------------------|
 | `actual` *(default)* | 6.1.A           | Actual total load                     |
 | `day_ahead`          | 6.1.B           | Day-ahead total load forecast         |
 | `week_ahead`         | 6.1.C           | Week-ahead total load forecast        |
