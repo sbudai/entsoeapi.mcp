@@ -11,11 +11,13 @@
 #' @param session_tools Logical. If `TRUE`, expose tools that can register
 #'   additional tools at runtime. Defaults to `FALSE`.
 #'
+#' @importFrom mcptools mcp_server
+#'
 #' @return Does not return; runs until the MCP client closes the connection.
 #'
 #' @export
 run <- function(session_tools = FALSE) {
-  mcptools::mcp_server(
+  mcp_server(
     tools = lapply(X = all_tools(), FUN = mute_stdout_tool),
     session_tools = session_tools
   ) |>
@@ -37,9 +39,13 @@ run <- function(session_tools = FALSE) {
 #' original function already has the correct formals bound, so ... just forwards
 #' them. capture.output's on.exit always restores stdout even on error.
 #'
-#' @param tool_def description
+#' @param tool_def A `ToolDef` S7 object (as returned by `mcptools::tool()`).
 #'
-#' @return ...
+#' @importFrom utils capture.output
+#'
+#' @return A `ToolDef` object identical to `tool_def` except that its callable
+#'   body suppresses any stdout produced during execution (e.g. HTTP headers
+#'   printed by `httr2::req_verbose()`).
 #'
 #' @noRd
 mute_stdout_tool <- function(tool_def) {
@@ -63,7 +69,7 @@ mute_stdout_tool <- function(tool_def) {
   # body() replacement strips S7 class identity — restore all saved
   # attributes (skip srcref/srcfile/srcfilecopy which belong to the old body).
   src_attrs <- c("srcref", "srcfile", "srcfilecopy")
-  for (nm in base::setdiff(x = names(old_attrs), y = src_attrs)) {
+  for (nm in setdiff(x = names(old_attrs), y = src_attrs)) {
     attr(x = wrapper, which = nm) <- old_attrs[[nm]]
   }
   class(wrapper) <- old_class
@@ -85,22 +91,13 @@ all_tools <- function() {
     tool_resource_object_eic,
     tool_get_news,
 
-    # Load
-    tool_load_actual_total,
-    tool_load_day_ahead_total_forecast,
-    tool_load_week_ahead_total_forecast,
-    tool_load_month_ahead_total_forecast,
-    tool_load_year_ahead_total_forecast,
-    tool_load_year_ahead_forecast_margin,
+    # Load (merged: actual, day_ahead, week_ahead, month_ahead, year_ahead,
+    #               margin)
+    tool_load,
 
-    # Generation
-    tool_gen_per_prod_type,
-    tool_gen_installed_capacity_per_pt,
-    tool_gen_installed_capacity_per_pu,
-    tool_gen_wind_solar_forecasts,
-    tool_gen_day_ahead_forecast,
-    tool_gen_per_gen_unit,
-    tool_gen_storage_mean_filling_rate,
+    # Generation (merged: time-series & capacity)  # nolint: commented_code_linter
+    tool_gen_time_series,
+    tool_gen_capacity,
 
     # Market
     tool_energy_prices,

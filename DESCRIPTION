@@ -15,6 +15,8 @@ Imports:
     ellmer,
     lubridate,
     jsonlite
+Suggests:
+    testthat (>= 3.0.0)
 License: MIT + file LICENSE
 URL: https://github.com/sbudai/entsoeapi.mcp
 BugReports: https://github.com/sbudai/entsoeapi.mcp/issues
