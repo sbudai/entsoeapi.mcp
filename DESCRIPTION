@@ -1,6 +1,6 @@
 Package: entsoeapi.mcp
 Title: MCP Server for the ENTSO-E Transparency Platform API
-Version: 0.1.0
+Version: 0.3.0
 Authors@R: person("Sándor", "Budai", role = c("aut", "cre", "cph"),
            email = "sbudai.ga@gmail.com")
 Description: Provides a Model Context Protocol (MCP) server that exposes
@@ -14,7 +14,10 @@ Imports:
     mcptools,
     ellmer,
     lubridate,
-    jsonlite
+    jsonlite,
+    duckdb,
+    DBI,
+    digest
 Suggests:
     testthat (>= 3.0.0)
 Remotes:
@@ -24,8 +27,9 @@ URL: https://github.com/sbudai/entsoeapi.mcp
 BugReports: https://github.com/sbudai/entsoeapi.mcp/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Collation:
+    'db.R'
     'utils.R'
     'tools.R'
     'run.R'
+Config/roxygen2/version: 8.0.0

@@ -59,6 +59,31 @@ slim_ts <- function(
 }
 
 
+#' Cache a data frame in the session DuckDB and return an envelope.
+#'
+#' Used by the 21 time-series tools to push the full result into an in-memory
+#' DuckDB table; the LLM then aggregates / filters / joins via the `sql_query`
+#' tool. Constant metadata columns are dropped first via [slim_ts()] — they
+#' waste DuckDB space *and* preview tokens.
+#'
+#' Falls back to [safe_to_csv()] for NULL / empty frames and non-data-frame
+#' results (occasional `entsoeapi` helpers return nested lists).
+#'
+#' @param df A data frame, or NULL / empty / list (handled gracefully).
+#' @param prefix Short label for the cached table name, e.g. `"load_actual"`.
+#' @param args_list Named list of identifying args (hashed into the suffix).
+#'
+#' @return The envelope text produced by [db_store()], or a fallback string.
+#'
+#' @noRd
+safe_to_cache <- function(df, prefix, args_list) {
+  if (is.null(df) || (is.data.frame(df) && nrow(df) == 0L)) return("(no data)")
+  if (!is.data.frame(df)) return(safe_to_csv(df))
+  df <- slim_ts(df)
+  db_store(df = df, prefix = prefix, args_list = args_list)
+}
+
+
 #' Serialise a data frame to CSV, slimming and capping rows to avoid
 #' overwhelming the LLM context window.
 #'

@@ -51,7 +51,15 @@ tool_area_eic <- tool(
     "etc.). Pass a query string to filter by country name, ISO code, or zone",
     "name (case-insensitive). IMPORTANT: Always display the full table of",
     "matches to the user and ask them to confirm which EIC code to use before",
-    "querying data - many countries have multiple bidding zones."
+    "querying data - many countries have multiple bidding zones.",
+    "When the query resolves to MULTIPLE EICs (e.g. Germany has at least",
+    "three: DE-LU bidding zone '10Y1001A1001A82H', DE control area, and the",
+    "historical DE-AT-LU zone), you MUST present every match with its",
+    "area_type_code and ask the user which to use before calling any",
+    "downstream tool. Day-ahead and intraday PRICES are published per",
+    "BIDDING ZONE (BZN); LOAD is published per CONTROL AREA (CTA);",
+    "CROSS-BORDER flows and transfer capacities are published per BORDER.",
+    "Pick the EIC whose area_type_code matches the domain you need."
   ),
   arguments = list(
     query = type_string(
@@ -188,7 +196,13 @@ tool_load <- tool(
         " month_ahead, year_ahead, margin"
       )
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = paste0("load_", type),
+        args_list = list(
+          eic = eic, period_start = period_start,
+          period_end = period_end, type = type
+        )
+      )
   },
   description = paste(
     "Get load data for a bidding zone. Prefer 1-3 day date ranges - 15-min",
@@ -247,7 +261,13 @@ tool_gen_time_series <- tool(
         "'. Use: actual, wind_solar, day_ahead, per_unit, storage"
       )
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = paste0("gen_", type),
+        args_list = list(
+          eic = eic, period_start = period_start,
+          period_end = period_end, type = type, gen_type = gen_type
+        )
+      )
   },
   description = paste(
     "Get generation time-series for a bidding zone. Prefer 1-3 day date ranges",
@@ -300,7 +320,12 @@ tool_gen_capacity <- tool(
       psr_type = psr_type,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix = if (isTRUE(per_unit)) "gen_capacity_pu" else "gen_capacity_pt",
+        args_list = list(
+          eic = eic, year = year, per_unit = per_unit, psr_type = psr_type
+        )
+      )
   },
   description = paste(
     "Get installed generation capacity for a bidding zone and year.",
@@ -339,13 +364,25 @@ tool_energy_prices <- tool(
       contract_type = contract_type,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "energy_prices",
+        args_list = list(
+          eic = eic, period_start = period_start,
+          period_end = period_end, contract_type = contract_type
+        )
+      )
   },
   description = paste(
     "Get day-ahead or intraday market clearing prices (12.1.D) for a bidding",
     "zone. Prefer 1-3 day date ranges (results capped at 100 rows). Max 1-year",
     "API limit. contract_type: 'A01' = Day ahead (default), 'A07' = Intraday.",
-    "Use area_eic() to find the EIC code."
+    "Use area_eic() to find the EIC code.",
+    "NOTE: ENTSO-E publishes multiple TimeSeries (sequences) per auction",
+    "document - typically Sequence 1 = the BINDING auction price, Sequence 2",
+    "= secondary / SDAC rerun / shadow series. The cached table may contain",
+    "all sequences; if the envelope WARNING reports multiple series, filter",
+    "explicitly (e.g. WHERE sequence = 1) before computing statistics, or",
+    "ask the user which series they meant."
   ),
   arguments = list(
     eic = type_string(description = "EIC code of the bidding zone."),
@@ -378,12 +415,22 @@ tool_intraday_prices <- tool(
       period_end = parse_date(ts = period_end),
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "intraday_prices",
+        args_list = list(
+          eic = eic, period_start = period_start, period_end = period_end
+        )
+      )
   },
   description = paste(
     "Get intraday market prices for a bidding zone. Specialised wrapper around",
     "the intraday contract type. Prefer 1-3 day date ranges (results capped at",
-    "100 rows). Max 1-year API limit."
+    "100 rows). Max 1-year API limit.",
+    "NOTE: ENTSO-E publishes multiple TimeSeries (sequences) per auction",
+    "document - typically Sequence 1 = the BINDING auction price, Sequence 2",
+    "= secondary / shadow series. If the envelope WARNING reports multiple",
+    "series, filter explicitly (e.g. WHERE sequence = 1) before computing",
+    "statistics, or ask the user which series they meant."
   ),
   arguments = list(
     eic = type_string(description = "EIC code of the bidding zone."),
@@ -412,7 +459,14 @@ tool_net_transfer_capacities <- tool(
       contract_type = contract_type,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "ntc",
+        args_list = list(
+          eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end,
+          contract_type = contract_type
+        )
+      )
   },
   description = paste(
     "Get Net Transfer Capacities (NTC) between two bidding zones (11.1).",
@@ -458,7 +512,13 @@ tool_day_ahead_commercial_sched <- tool( # nolint: object_length_linter
       period_end = parse_date(ts = period_end),
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "da_commercial_sched",
+        args_list = list(
+          eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end
+        )
+      )
   },
   description = paste(
     "Get day-ahead commercial schedules (12.1.F) between two bidding zones.",
@@ -497,7 +557,14 @@ tool_explicit_offered_transfer_capacities <- tool( # nolint: object_length_linte
       contract_type = contract_type,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "explicit_offered_tc",
+        args_list = list(
+          eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end,
+          contract_type = contract_type
+        )
+      )
   },
   description = paste(
     "Get explicit offered transfer capacities (12.1.A) between two bidding",
@@ -539,7 +606,13 @@ tool_flow_based_allocations <- tool(
       process_type = process_type,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "flow_based",
+        args_list = list(
+          eic = eic, period_start = period_start,
+          period_end = period_end, process_type = process_type
+        )
+      )
   },
   description = paste(
     "Get flow-based allocations (12.1.B) for the CWE/Core region. Prefer 1-3",
@@ -578,7 +651,13 @@ tool_congestion_income <- tool(
       contract_type = contract_type,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "congestion_income",
+        args_list = list(
+          eic = eic, period_start = period_start,
+          period_end = period_end, contract_type = contract_type
+        )
+      )
   },
   description = paste(
     "Get congestion income (12.1.G) for a bidding zone or border. Prefer 1-3",
@@ -618,7 +697,14 @@ tool_allocated_transfer_capacities_3rd_countries <- tool( # nolint: object_lengt
       auction_category = auction_category,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "allocated_tc_3rd",
+        args_list = list(
+          eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end,
+          contract_type = contract_type, auction_category = auction_category
+        )
+      )
   },
   description = paste(
     "Get allocated transfer capacities for third-country borders (12.1.C).",
@@ -672,7 +758,13 @@ tool_cross_border_physical_flows <- tool( # nolint: object_length_linter
       period_end = parse_date(ts = period_end),
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "cross_border_flows",
+        args_list = list(
+          eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end
+        )
+      )
   },
   description = paste(
     "Get physical cross-border flows (12.1.G) between two bidding zones.",
@@ -710,7 +802,13 @@ tool_total_commercial_sched <- tool(
       period_end = parse_date(ts = period_end),
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "total_commercial_sched",
+        args_list = list(
+          eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end
+        )
+      )
   },
   description = paste(
     "Get total commercial schedules (12.1.F) between two bidding zones.",
@@ -748,7 +846,13 @@ tool_net_positions <- tool(
       contract_type = contract_type,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "net_positions",
+        args_list = list(
+          eic = eic, period_start = period_start,
+          period_end = period_end, contract_type = contract_type
+        )
+      )
   },
   description = paste(
     "Get net positions (12.1.H) for a bidding zone. Prefer 1-3 day date ranges",
@@ -787,7 +891,14 @@ tool_forecasted_transfer_capacities <- tool( # nolint: object_length_linter
       market_agreement_type = market_agreement_type,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "forecasted_tc",
+        args_list = list(
+          eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end,
+          market_agreement_type = market_agreement_type
+        )
+      )
   },
   description = paste(
     "Get forecasted transfer capacities (11.1) between two bidding zones.",
@@ -839,7 +950,14 @@ tool_outages_gen_units <- tool(
       event_nature = event_nature,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "outages_gen",
+        args_list = list(
+          eic = eic, period_start = period_start,
+          period_end = period_end,
+          doc_status = doc_status, event_nature = event_nature
+        )
+      )
   },
   description = paste(
     "Get unavailability of generation units (15.1.A&B) for a bidding zone.",
@@ -891,7 +1009,14 @@ tool_outages_prod_units <- tool(
       event_nature = event_nature,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "outages_prod",
+        args_list = list(
+          eic = eic, period_start = period_start,
+          period_end = period_end,
+          doc_status = doc_status, event_nature = event_nature
+        )
+      )
   },
   description = paste(
     "Get unavailability of production units (15.1.C&D) for a bidding zone.",
@@ -943,7 +1068,14 @@ tool_outages_transmission_grid <- tool(
       event_nature = event_nature,
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "outages_grid",
+        args_list = list(
+          eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end,
+          doc_status = doc_status, event_nature = event_nature
+        )
+      )
   },
   description = paste(
     "Get unavailability in the transmission grid (15.1.A&B) on a border.",
@@ -999,7 +1131,12 @@ tool_imbalance_prices <- tool(
       period_end = parse_date(ts = period_end),
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "imbalance_prices",
+        args_list = list(
+          eic = eic, period_start = period_start, period_end = period_end
+        )
+      )
   },
   description = paste(
     "Get imbalance prices (17.1.D) for a scheduling area. Prefer 1-3 day date",
@@ -1029,7 +1166,12 @@ tool_imbalance_volumes <- tool(
       period_end = parse_date(ts = period_end),
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "imbalance_volumes",
+        args_list = list(
+          eic = eic, period_start = period_start, period_end = period_end
+        )
+      )
   },
   description = paste(
     "Get imbalance volumes (17.1.C) for a scheduling area. Prefer 1-3 day",
@@ -1062,7 +1204,15 @@ tool_contracted_reserves <- tool(
       period_end = parse_date(ts = period_end),
       tidy_output = TRUE
     ) |>
-      safe_to_csv()
+      safe_to_cache(
+        prefix    = "contracted_reserves",
+        args_list = list(
+          eic = eic,
+          market_agreement_type = market_agreement_type,
+          process_type = process_type,
+          period_start = period_start, period_end = period_end
+        )
+      )
   },
   description = paste(
     "Get contracted balancing reserves (17.1.B) for a scheduling area. Prefer",
@@ -1093,6 +1243,78 @@ tool_contracted_reserves <- tool(
       description = paste(
         "Optional reserve type: 'A46' FCR, 'A47' mFRR, 'A51' aFRR, 'A52' RR."
       ),
+      required = FALSE
+    )
+  )
+)
+
+
+# ============================================================
+# Session DuckDB Tools
+# ============================================================
+
+tool_sql_query <- tool(
+  name = "sql_query",
+  fun = \(sql, max_rows = 100L) {
+    db_query(sql = sql, max_rows = as.integer(max_rows))
+  },
+  description = paste(
+    "Run a SQL query (DuckDB dialect) against tables cached in this session.",
+    "Every time-series tool inserts its full result into the session DuckDB",
+    "and returns a table name; use sql_query to aggregate, filter, or join",
+    "those tables instead of re-fetching from the ENTSO-E API. Full SELECT",
+    "/ WITH / CREATE TEMP / INSERT etc. are supported. Results are returned as",
+    "CSV and capped at max_rows (default 100) - aggregate with GROUP BY to",
+    "stay under the cap. Use list_tables() or describe_table() to discover",
+    "availabletables. DuckDB errors are returned as '# error: <message>' so",
+    "you can read them and retry."
+  ),
+  arguments = list(
+    sql = type_string(
+      description = paste(
+        "DuckDB SQL. Example: \"SELECT date_trunc('week', dt_start) AS wk,",
+        "AVG(value) FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1\"."
+      )
+    ),
+    max_rows = type_integer(
+      description = "Row cap on the returned CSV (default 100).",
+      required = FALSE
+    )
+  )
+)
+
+
+tool_list_tables <- tool(
+  name = "list_tables",
+  fun = \() db_list(),
+  description = paste(
+    "List every table cached in this session's DuckDB with row counts and",
+    "column schemas. Returns CSV with columns: table_name, rows, columns",
+    "(semicolon-separated). Use this before sql_query() to discover what's",
+    "available without re-calling the ENTSO-E API."
+  ),
+  arguments = list()
+)
+
+
+tool_describe_table <- tool(
+  name = "describe_table",
+  fun = \(name, n_preview = 5L) {
+    db_describe(name = name, n_preview = as.integer(n_preview))
+  },
+  description = paste(
+    "Return schema + row count + N sample rows for one cached table. Same",
+    "envelope shape as the data-fetching tools, so it's a quick way to refresh",
+    "your memory of a table's columns and types before writing a sql_query()."
+  ),
+  arguments = list(
+    name = type_string(
+      description = paste(
+        "Table name as returned by a data-fetching tool or list_tables()."
+      )
+    ),
+    n_preview = type_integer(
+      description = "Number of sample rows to include (default 5).",
       required = FALSE
     )
   )

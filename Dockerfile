@@ -23,7 +23,10 @@ RUN Rscript -e " \
     'posit-dev/mcptools', \
     'ellmer', \
     'lubridate', \
-    'jsonlite' \
+    'jsonlite', \
+    'duckdb', \
+    'DBI', \
+    'digest' \
   ))"
 
 # Copy the package source and install it
