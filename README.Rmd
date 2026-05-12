@@ -29,7 +29,8 @@ n_tools <- length(entsoeapi.mcp:::all_tools())
 n_tests_run   <- .count_tests("test-run.R")
 n_tests_tools <- .count_tests("test-tools.R")
 n_tests_utils <- .count_tests("test-utils.R")
-n_tests_total <- n_tests_run + n_tests_tools + n_tests_utils
+n_tests_db    <- .count_tests("test-db.R")
+n_tests_total <- n_tests_run + n_tests_tools + n_tests_utils + n_tests_db
 
 # Coverage — round to nearest integer for the badge.
 cov_pct <- round(covr::percent_coverage(covr::package_coverage(path = ".")))
@@ -46,6 +47,8 @@ cov_pct <- round(covr::percent_coverage(covr::package_coverage(path = ".")))
 An [MCP](https://modelcontextprotocol.io) server that exposes the [ENTSO-E Transparency Platform](https://transparency.entsoe.eu) as tools for LLM-enabled applications such as Claude Desktop. Query European electricity market, load, generation, transmission, outages, and balancing data through natural language.
 
 Built in pure R on top of [`entsoeapi`](https://github.com/krose/entsoeapi) and [`mcptools`](https://github.com/posit-dev/mcptools). Distributed as a Docker image — no R installation required for end users.
+
+Large time-series results are cached in an in-process **DuckDB** inside the container, so the LLM can aggregate, filter, and join via SQL without flooding its context window.
 
 ------------------------------------------------------------------------
 
@@ -128,7 +131,7 @@ Claude should call the `area_eic` tool and return a list of German bidding zones
 
 ## Available tools (`r n_tools`)
 
-All tools return results as CSV (with a truncation notice if capped at 100 rows). All date parameters use **CET timezone** and **YYYY-MM-DD format**.
+The 21 time-series tools return a compact envelope pointing at a cached DuckDB table (`{table, rows, schema, preview, SQL hint}`). Use `sql_query` to aggregate or join. EIC lookup tools and `get_news` return CSV directly. All date parameters use **CET timezone** and **YYYY-MM-DD format**.
 
 ### EIC lookup
 
@@ -212,12 +215,56 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 | `imbalance_volumes`   | 17.1.C          | Imbalance volumes             |
 | `contracted_reserves` | 17.1.B          | Contracted balancing reserves |
 
+### Session DuckDB cache
+
+| Tool             | Description                                                                                                            |
+|------------------|------------------------------------------------------------------------------------------------------------------------|
+| `sql_query`      | Run a SQL query (DuckDB dialect) against cached tables. Returns CSV, capped at `max_rows` (default 100).               |
+| `list_tables`    | List every cached table in this session with row counts and column schemas.                                            |
+| `describe_table` | Schema + row count + N sample rows for one named table.                                                                |
+
+Every time-series tool inserts its full result into an in-memory DuckDB table and returns an envelope. The envelope tells Claude — in every call — that statistics must be computed via `sql_query`, never from the schema sample, and warns when multiple `TimeSeries` (e.g. day-ahead Sequence 1 vs. Sequence 2) are stacked together in one cached table:
+
+```
+# table: energy_prices_a3f7d2
+# rows: 336
+# columns: dt_start TIMESTAMP, price DOUBLE, sequence INTEGER
+# ────────────────────────────────────────────────────────────
+# IMPORTANT — read before using this result:
+#   This is a CACHED TABLE, not a result set. The rows below
+#   are a SCHEMA SAMPLE only — they are NOT representative of
+#   the data, may omit other series, and MUST NOT be used for
+#   any analysis. NEVER compute averages, totals, min/max,
+#   counts, or any statistic from this sample.
+#   ALWAYS call sql_query(...) against the table named above
+#   for ANY aggregation, filter, statistic, or join.
+# ────────────────────────────────────────────────────────────
+# WARNING: multiple series present in this table:
+#   sequence: 1, 2     (filter explicitly; do not assume one)
+# schema sample (5 of 336 rows; do not use for analysis):
+dt_start,price,sequence
+2024-01-01 00:00:00,42.5,1
+2024-01-01 01:00:00,41.2,1
+2024-01-01 02:00:00,40.8,1
+2024-01-01 03:00:00,40.1,1
+2024-01-01 04:00:00,39.7,1
+# suggested query: SELECT date_trunc('week', dt_start) AS wk, AVG(price) FROM energy_prices_a3f7d2 GROUP BY 1 ORDER BY 1
+```
+
+The cache lives for the lifetime of one Claude Desktop session (the `docker run --rm -i` container). Identical queries within a session reuse the same table — no second API hit.
+
+**Example workflow** Claude would run for *"Weekly average German load for January 2024"*:
+
+1.  `area_eic(query = "Germany")` — resolve EIC code
+2.  `load(eic = "10Y...", period_start = "2024-01-01", period_end = "2024-01-31")` — envelope with `table = load_actual_a3f7d2`
+3.  `sql_query(sql = "SELECT date_trunc('week', dt_start) AS wk, AVG(value)::INT AS avg_mw FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1")` — 5 weekly rows instead of 744 hourly rows
+
 ------------------------------------------------------------------------
 
 ## Tips for good results
 
 -   **Always call `area_eic` first** to resolve a country name to its EIC code before querying data. Many countries have multiple bidding zones (e.g. Norway has NO1–NO5).
--   **Use short date ranges** (1–7 days). ENTSO-E data is at 15-minute to 1-hour resolution — a full week produces \~672 rows. Results are capped at 100 rows with a truncation notice.
+-   **Fetch generously, aggregate via SQL.** The 100-row cap only applies to `sql_query` output — the cached DuckDB table holds the full result. Fetch a month or year of data once, then aggregate down to weekly / daily values via `sql_query(...)`.
 -   **For generation time-series**, omit `gen_type` to get all production types, or filter with codes like `B16` (Solar) or `B18` (Wind offshore).
 
 ## Data notes
@@ -312,13 +359,15 @@ entsoeapi.mcp/
 ├── R/
 |   ├── run.R             # Entry point: run() → mcp_server(tools = all_tools())
 |   ├── tools.R           # All `r n_tools` ellmer::tool() definitions
-|   └── utils.R           # parse_date(), slim_ts(), safe_to_csv()
+|   ├── utils.R           # parse_date(), slim_ts(), safe_to_csv(), safe_to_cache()
+|   └── db.R              # In-memory DuckDB singleton + sql_query / list / describe helpers
 ├── tests
 |   ├── testthat.R        # Test framework helper
 |   └── testthat
-|       ├── test-run.R    # Unit tests of run.R (13 tests)
-|       ├── test-tools.R  # Unit tests of tools.R (95 tests)
-|       └── test-utils.R  # Unit tests of utils.R (26 tests)
+|       ├── test-run.R    # Unit tests of run.R (`r n_tests_run` tests)
+|       ├── test-tools.R  # Unit tests of tools.R (`r n_tests_tools` tests)
+|       ├── test-utils.R  # Unit tests of utils.R (`r n_tests_utils` tests)
+|       └── test-db.R     # Unit tests of db.R (`r n_tests_db` tests)
 ├── man
 |   └── run.Rd            # Documentation of functions in R/run.R
 └── .github/
@@ -330,7 +379,7 @@ entsoeapi.mcp/
 
 ### Token budget design
 
-Tool results are returned as **CSV** (not JSON) to reduce per-row key repetition, cutting output size 60–70% for wide time-series frames. Constant metadata columns (domain names, unit labels) are dropped automatically by `slim_ts()`. Results are hard-capped at 100 rows with a truncation notice so the LLM always knows when data is partial.
+Tool results from the 21 time-series tools are inserted into an in-process **DuckDB** (in-memory, per session) and the LLM gets a compact envelope back — table name, row count, column schema, a 5-row preview, and an SQL hint. The LLM then issues SQL via `sql_query` to aggregate, filter, or join inside the container, so only the *aggregated* result ever reaches the prompt context. `slim_ts()` still drops constant metadata columns before insertion to save memory and preview tokens. The 5 EIC lookup tools and `get_news` keep their direct-CSV path because they're small and interactive.
 
 ------------------------------------------------------------------------
 
@@ -339,7 +388,7 @@ Tool results are returned as **CSV** (not JSON) to reduce per-row key repetition
 -   R ≥ 4.2.0
 -   [`entsoeapi`](https://github.com/krose/entsoeapi) (GitHub)
 -   [`mcptools`](https://github.com/posit-dev/mcptools) (GitHub)
--   `ellmer`, `lubridate`, `jsonlite` (CRAN)
+-   `ellmer`, `lubridate`, `jsonlite`, `duckdb`, `DBI`, `digest` (CRAN)
 
 ------------------------------------------------------------------------
 

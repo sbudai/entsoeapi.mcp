@@ -1,9 +1,24 @@
 testthat::test_that(
-  desc = "all_tools() returns a list of 26 tool definitions",
+  desc = "all_tools() returns a list of 29 tool definitions",
   code = {
     tools <- entsoeapi.mcp:::all_tools()
     testthat::expect_type(object = tools, type = "list")
-    testthat::expect_length(object = tools, n = 26L)
+    testthat::expect_length(object = tools, n = 29L)
+  }
+)
+
+testthat::test_that(
+  desc = "all_tools() includes the three session DuckDB tools",
+  code = {
+    tools <- entsoeapi.mcp:::all_tools()
+    names_vec <- vapply(
+      X         = tools,
+      FUN       = \(t) attr(x = t, which = "name") %||% "",
+      FUN.VALUE = character(1L)
+    )
+    testthat::expect_true(object = "sql_query"      %in% names_vec)
+    testthat::expect_true(object = "list_tables"    %in% names_vec)
+    testthat::expect_true(object = "describe_table" %in% names_vec)
   }
 )
 
@@ -21,7 +36,7 @@ testthat::test_that(
   desc = "mute_stdout_tool() preserves class and regular attributes",
   code = {
     tool  <- make_mock_tool()
-    muted <- mute_stdout_tool(tool_def = tool)
+    muted <- entsoeapi.mcp:::mute_stdout_tool(tool_def = tool)
     testthat::expect_equal(
       object = class(muted),
       expected = c("ellmer::ToolDef", "function", "S7_object")
@@ -53,7 +68,7 @@ testthat::test_that(
         srcfilecopy = "fake_srcfilecopy"
       )
     )
-    muted <- mute_stdout_tool(tool_def = tool)
+    muted <- entsoeapi.mcp:::mute_stdout_tool(tool_def = tool)
     testthat::expect_false(
       object = identical(x = attr(muted, "srcref"), y = "fake_srcref")
     )
@@ -70,7 +85,7 @@ testthat::test_that(
   desc = "mute_stdout_tool() wrapper returns the original function's value",
   code = {
     tool <- make_mock_tool(fn = \(...) 42L)
-    muted <- mute_stdout_tool(tool_def = tool)
+    muted <- entsoeapi.mcp:::mute_stdout_tool(tool_def = tool)
     testthat::expect_equal(object = muted(), expected = 42L)
   }
 )
@@ -93,7 +108,7 @@ testthat::test_that(
       }
     )
     testthat::expect_false(object = captured$session_tools)
-    testthat::expect_length(object = captured$tools, n = 26L)
+    testthat::expect_length(object = captured$tools, n = 29L)
   }
 )
 

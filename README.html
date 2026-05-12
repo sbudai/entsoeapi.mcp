@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+@font-face {
+font-family: octicons-link;
+src: url(data:font/woff;charset=utf-8;base64,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) format('woff');
+}
+body {
+-webkit-text-size-adjust: 100%;
+text-size-adjust: 100%;
+color: #333;
+font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, freesans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+font-size: 16px;
+line-height: 1.6;
+word-wrap: break-word;
+}
+a {
+background-color: transparent;
+}
+a:active,
+a:hover {
+outline: 0;
+}
+strong {
+font-weight: bold;
+}
+h1 {
+font-size: 2em;
+margin: 0.67em 0;
+}
+img {
+border: 0;
+}
+hr {
+box-sizing: content-box;
+height: 0;
+}
+pre {
+overflow: auto;
+}
+code,
+kbd,
+pre {
+font-family: monospace, monospace;
+font-size: 1em;
+}
+input {
+color: inherit;
+font: inherit;
+margin: 0;
+}
+html input[disabled] {
+cursor: default;
+}
+input {
+line-height: normal;
+}
+input[type="checkbox"] {
+box-sizing: border-box;
+padding: 0;
+}
+table {
+border-collapse: collapse;
+border-spacing: 0;
+}
+td,
+th {
+padding: 0;
+}
+* {
+box-sizing: border-box;
+}
+input {
+font: 13px / 1.4 Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+a {
+color: #4078c0;
+text-decoration: none;
+}
+a:hover,
+a:active {
+text-decoration: underline;
+}
+hr {
+height: 0;
+margin: 15px 0;
+overflow: hidden;
+background: transparent;
+border: 0;
+border-bottom: 1px solid #ddd;
+}
+hr:before {
+display: table;
+content: "";
+}
+hr:after {
+display: table;
+clear: both;
+content: "";
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-top: 15px;
+margin-bottom: 15px;
+line-height: 1.1;
+}
+h1 {
+font-size: 30px;
+}
+h2 {
+font-size: 21px;
+}
+h3 {
+font-size: 16px;
+}
+h4 {
+font-size: 14px;
+}
+h5 {
+font-size: 12px;
+}
+h6 {
+font-size: 11px;
+}
+blockquote {
+margin: 0;
+}
+ul,
+ol {
+padding: 0;
+margin-top: 0;
+margin-bottom: 0;
+}
+ol ol,
+ul ol {
+list-style-type: lower-roman;
+}
+ul ul ol,
+ul ol ol,
+ol ul ol,
+ol ol ol {
+list-style-type: lower-alpha;
+}
+dd {
+margin-left: 0;
+}
+code {
+font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+font-size: 12px;
+}
+pre {
+margin-top: 0;
+margin-bottom: 0;
+font: 12px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+.select::-ms-expand {
+opacity: 0;
+}
+.octicon {
+font: normal normal normal 16px/1 octicons-link;
+display: inline-block;
+text-decoration: none;
+text-rendering: auto;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+}
+.octicon-link:before {
+content: '\f05c';
+}
+.markdown-body:before {
+display: table;
+content: "";
+}
+.markdown-body:after {
+display: table;
+clear: both;
+content: "";
+}
+.markdown-body>*:first-child {
+margin-top: 0 !important;
+}
+.markdown-body>*:last-child {
+margin-bottom: 0 !important;
+}
+a:not([href]) {
+color: inherit;
+text-decoration: none;
+}
+.anchor {
+display: inline-block;
+padding-right: 2px;
+margin-left: -18px;
+}
+.anchor:focus {
+outline: none;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-top: 1em;
+margin-bottom: 16px;
+font-weight: bold;
+line-height: 1.4;
+}
+h1 .octicon-link,
+h2 .octicon-link,
+h3 .octicon-link,
+h4 .octicon-link,
+h5 .octicon-link,
+h6 .octicon-link {
+color: #000;
+vertical-align: middle;
+visibility: hidden;
+}
+h1:hover .anchor,
+h2:hover .anchor,
+h3:hover .anchor,
+h4:hover .anchor,
+h5:hover .anchor,
+h6:hover .anchor {
+text-decoration: none;
+}
+h1:hover .anchor .octicon-link,
+h2:hover .anchor .octicon-link,
+h3:hover .anchor .octicon-link,
+h4:hover .anchor .octicon-link,
+h5:hover .anchor .octicon-link,
+h6:hover .anchor .octicon-link {
+visibility: visible;
+}
+h1 {
+padding-bottom: 0.3em;
+font-size: 2.25em;
+line-height: 1.2;
+border-bottom: 1px solid #eee;
+}
+h1 .anchor {
+line-height: 1;
+}
+h2 {
+padding-bottom: 0.3em;
+font-size: 1.75em;
+line-height: 1.225;
+border-bottom: 1px solid #eee;
+}
+h2 .anchor {
+line-height: 1;
+}
+h3 {
+font-size: 1.5em;
+line-height: 1.43;
+}
+h3 .anchor {
+line-height: 1.2;
+}
+h4 {
+font-size: 1.25em;
+}
+h4 .anchor {
+line-height: 1.2;
+}
+h5 {
+font-size: 1em;
+}
+h5 .anchor {
+line-height: 1.1;
+}
+h6 {
+font-size: 1em;
+color: #777;
+}
+h6 .anchor {
+line-height: 1.1;
+}
+p,
+blockquote,
+ul,
+ol,
+dl,
+table,
+pre {
+margin-top: 0;
+margin-bottom: 16px;
+}
+hr {
+height: 4px;
+padding: 0;
+margin: 16px 0;
+background-color: #e7e7e7;
+border: 0 none;
+}
+ul,
+ol {
+padding-left: 2em;
+}
+ul ul,
+ul ol,
+ol ol,
+ol ul {
+margin-top: 0;
+margin-bottom: 0;
+}
+li>p {
+margin-top: 16px;
+}
+dl {
+padding: 0;
+}
+dl dt {
+padding: 0;
+margin-top: 16px;
+font-size: 1em;
+font-style: italic;
+font-weight: bold;
+}
+dl dd {
+padding: 0 16px;
+margin-bottom: 16px;
+}
+blockquote {
+padding: 0 15px;
+color: #777;
+border-left: 4px solid #ddd;
+}
+blockquote>:first-child {
+margin-top: 0;
+}
+blockquote>:last-child {
+margin-bottom: 0;
+}
+table {
+display: block;
+width: 100%;
+overflow: auto;
+word-break: normal;
+word-break: keep-all;
+}
+table th {
+font-weight: bold;
+}
+table th,
+table td {
+padding: 6px 13px;
+border: 1px solid #ddd;
+}
+table tr {
+background-color: #fff;
+border-top: 1px solid #ccc;
+}
+table tr:nth-child(2n) {
+background-color: #f8f8f8;
+}
+img {
+max-width: 100%;
+box-sizing: content-box;
+background-color: #fff;
+}
+code {
+padding: 0;
+padding-top: 0.2em;
+padding-bottom: 0.2em;
+margin: 0;
+font-size: 85%;
+background-color: rgba(0,0,0,0.04);
+border-radius: 3px;
+}
+code:before,
+code:after {
+letter-spacing: -0.2em;
+content: "\00a0";
+}
+pre>code {
+padding: 0;
+margin: 0;
+font-size: 100%;
+word-break: normal;
+white-space: pre;
+background: transparent;
+border: 0;
+}
+.highlight {
+margin-bottom: 16px;
+}
+.highlight pre,
+pre {
+padding: 16px;
+overflow: auto;
+font-size: 85%;
+line-height: 1.45;
+background-color: #f7f7f7;
+border-radius: 3px;
+}
+.highlight pre {
+margin-bottom: 0;
+word-break: normal;
+}
+pre {
+word-wrap: normal;
+}
+pre code {
+display: inline;
+max-width: initial;
+padding: 0;
+margin: 0;
+overflow: initial;
+line-height: inherit;
+word-wrap: normal;
+background-color: transparent;
+border: 0;
+}
+pre code:before,
+pre code:after {
+content: normal;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font-size: 11px;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb;
+}
+.pl-c {
+color: #969896;
+}
+.pl-c1,
+.pl-s .pl-v {
+color: #0086b3;
+}
+.pl-e,
+.pl-en {
+color: #795da3;
+}
+.pl-s .pl-s1,
+.pl-smi {
+color: #333;
+}
+.pl-ent {
+color: #63a35c;
+}
+.pl-k {
+color: #a71d5d;
+}
+.pl-pds,
+.pl-s,
+.pl-s .pl-pse .pl-s1,
+.pl-sr,
+.pl-sr .pl-cce,
+.pl-sr .pl-sra,
+.pl-sr .pl-sre {
+color: #183691;
+}
+.pl-v {
+color: #ed6a43;
+}
+.pl-id {
+color: #b52a1d;
+}
+.pl-ii {
+background-color: #b52a1d;
+color: #f8f8f8;
+}
+.pl-sr .pl-cce {
+color: #63a35c;
+font-weight: bold;
+}
+.pl-ml {
+color: #693a17;
+}
+.pl-mh,
+.pl-mh .pl-en,
+.pl-ms {
+color: #1d3e81;
+font-weight: bold;
+}
+.pl-mq {
+color: #008080;
+}
+.pl-mi {
+color: #333;
+font-style: italic;
+}
+.pl-mb {
+color: #333;
+font-weight: bold;
+}
+.pl-md {
+background-color: #ffecec;
+color: #bd2c00;
+}
+.pl-mi1 {
+background-color: #eaffea;
+color: #55a532;
+}
+.pl-mdr {
+color: #795da3;
+font-weight: bold;
+}
+.pl-mo {
+color: #1d3e81;
+}
+kbd {
+display: inline-block;
+padding: 3px 5px;
+font: 11px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+line-height: 10px;
+color: #555;
+vertical-align: middle;
+background-color: #fcfcfc;
+border: solid 1px #ccc;
+border-bottom-color: #bbb;
+border-radius: 3px;
+box-shadow: inset 0 -1px 0 #bbb;
+}
+.task-list-item {
+list-style-type: none;
+}
+.task-list-item+.task-list-item {
+margin-top: 3px;
+}
+.task-list-item input {
+margin: 0 0.35em 0.25em -1.6em;
+vertical-align: middle;
+}
+:checked+.radio-label {
+z-index: 1;
+position: relative;
+border-color: #4078c0;
+}
+.sourceLine {
+display: inline-block;
+}
+code .kw { color: #000000; }
+code .dt { color: #ed6a43; }
+code .dv { color: #009999; }
+code .bn { color: #009999; }
+code .fl { color: #009999; }
+code .ch { color: #009999; }
+code .st { color: #183691; }
+code .co { color: #969896; }
+code .ot { color: #0086b3; }
+code .al { color: #a61717; }
+code .fu { color: #63a35c; }
+code .er { color: #a61717; background-color: #e3d2d2; }
+code .wa { color: #000000; }
+code .cn { color: #008080; }
+code .sc { color: #008080; }
+code .vs { color: #183691; }
+code .ss { color: #183691; }
+code .im { color: #000000; }
+code .va {color: #008080; }
+code .cf { color: #000000; }
+code .op { color: #000000; }
+code .bu { color: #000000; }
+code .ex { color: #000000; }
+code .pp { color: #999999; }
+code .at { color: #008080; }
+code .do { color: #969896; }
+code .an { color: #008080; }
+code .cv { color: #008080; }
+code .in { color: #008080; }
+</style>
+<style>
+body {
+box-sizing: border-box;
+min-width: 200px;
+max-width: 980px;
+margin: 0 auto;
+padding: 45px;
+padding-top: 0px;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+<h1 id="entsoeapimcp">entsoeapi.mcp</h1>
+<!-- badges: start -->
+
+<p><img src="data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODIiIGhlaWdodD0iMjAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0idGVzdHM6IGByIG4gdGVzdHMgdG90YWxgIHBhc3NpbmciPjx0aXRsZT50ZXN0czogYHIgbiB0ZXN0cyB0b3RhbGAgcGFzc2luZzwvdGl0bGU+PGxpbmVhckdyYWRpZW50IGlkPSJzIiB4Mj0iMCIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2JiYiIgc3RvcC1vcGFjaXR5PSIuMSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1vcGFjaXR5PSIuMSIvPjwvbGluZWFyR3JhZGllbnQ+PGNsaXBQYXRoIGlkPSJyIj48cmVjdCB3aWR0aD0iMTgyIiBoZWlnaHQ9IjIwIiByeD0iMyIgZmlsbD0iI2ZmZiIvPjwvY2xpcFBhdGg+PGcgY2xpcC1wYXRoPSJ1cmwoI3IpIj48cmVjdCB3aWR0aD0iMzciIGhlaWdodD0iMjAiIGZpbGw9IiM1NTUiLz48cmVjdCB4PSIzNyIgd2lkdGg9IjE0NSIgaGVpZ2h0PSIyMCIgZmlsbD0iIzRjMSIvPjxyZWN0IHdpZHRoPSIxODIiIGhlaWdodD0iMjAiIGZpbGw9InVybCgjcykiLz48L2c+PGcgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlZlcmRhbmEsR2VuZXZhLERlamFWdSBTYW5zLHNhbnMtc2VyaWYiIHRleHQtcmVuZGVyaW5nPSJnZW9tZXRyaWNQcmVjaXNpb24iIGZvbnQtc2l6ZT0iMTEwIj48dGV4dCBhcmlhLWhpZGRlbj0idHJ1ZSIgeD0iMTk1IiB5PSIxNTAiIGZpbGw9IiMwMTAxMDEiIGZpbGwtb3BhY2l0eT0iLjMiIHRyYW5zZm9ybT0ic2NhbGUoLjEpIiB0ZXh0TGVuZ3RoPSIyNzAiPnRlc3RzPC90ZXh0Pjx0ZXh0IHg9IjE5NSIgeT0iMTQwIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgZmlsbD0iI2ZmZiIgdGV4dExlbmd0aD0iMjcwIj50ZXN0czwvdGV4dD48dGV4dCBhcmlhLWhpZGRlbj0idHJ1ZSIgeD0iMTA4NSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iMTM1MCI+YHIgbiB0ZXN0cyB0b3RhbGAgcGFzc2luZzwvdGV4dD48dGV4dCB4PSIxMDg1IiB5PSIxNDAiIHRyYW5zZm9ybT0ic2NhbGUoLjEpIiBmaWxsPSIjZmZmIiB0ZXh0TGVuZ3RoPSIxMzUwIj5gciBuIHRlc3RzIHRvdGFsYCBwYXNzaW5nPC90ZXh0PjwvZz48L3N2Zz4=" alt="Tests" /> <img src="data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDYiIGhlaWdodD0iMjAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iY292ZXJhZ2U6IGByIGNvdiBwY3RgJSI+PHRpdGxlPmNvdmVyYWdlOiBgciBjb3YgcGN0YCU8L3RpdGxlPjxsaW5lYXJHcmFkaWVudCBpZD0icyIgeDI9IjAiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiYmIiIHN0b3Atb3BhY2l0eT0iLjEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3Atb3BhY2l0eT0iLjEiLz48L2xpbmVhckdyYWRpZW50PjxjbGlwUGF0aCBpZD0iciI+PHJlY3Qgd2lkdGg9IjE0NiIgaGVpZ2h0PSIyMCIgcng9IjMiIGZpbGw9IiNmZmYiLz48L2NsaXBQYXRoPjxnIGNsaXAtcGF0aD0idXJsKCNyKSI+PHJlY3Qgd2lkdGg9IjYxIiBoZWlnaHQ9IjIwIiBmaWxsPSIjNTU1Ii8+PHJlY3QgeD0iNjEiIHdpZHRoPSI4NSIgaGVpZ2h0PSIyMCIgZmlsbD0iIzRjMSIvPjxyZWN0IHdpZHRoPSIxNDYiIGhlaWdodD0iMjAiIGZpbGw9InVybCgjcykiLz48L2c+PGcgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IlZlcmRhbmEsR2VuZXZhLERlamFWdSBTYW5zLHNhbnMtc2VyaWYiIHRleHQtcmVuZGVyaW5nPSJnZW9tZXRyaWNQcmVjaXNpb24iIGZvbnQtc2l6ZT0iMTEwIj48dGV4dCBhcmlhLWhpZGRlbj0idHJ1ZSIgeD0iMzE1IiB5PSIxNTAiIGZpbGw9IiMwMTAxMDEiIGZpbGwtb3BhY2l0eT0iLjMiIHRyYW5zZm9ybT0ic2NhbGUoLjEpIiB0ZXh0TGVuZ3RoPSI1MTAiPmNvdmVyYWdlPC90ZXh0Pjx0ZXh0IHg9IjMxNSIgeT0iMTQwIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgZmlsbD0iI2ZmZiIgdGV4dExlbmd0aD0iNTEwIj5jb3ZlcmFnZTwvdGV4dD48dGV4dCBhcmlhLWhpZGRlbj0idHJ1ZSIgeD0iMTAyNSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iNzUwIj5gciBjb3YgcGN0YCU8L3RleHQ+PHRleHQgeD0iMTAyNSIgeT0iMTQwIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgZmlsbD0iI2ZmZiIgdGV4dExlbmd0aD0iNzUwIj5gciBjb3YgcGN0YCU8L3RleHQ+PC9nPjwvc3ZnPg==" alt="Coverage" /> <img src="data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDYiIGhlaWdodD0iMjAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0idG9vbHM6IGByIG4gdG9vbHNgIj48dGl0bGU+dG9vbHM6IGByIG4gdG9vbHNgPC90aXRsZT48bGluZWFyR3JhZGllbnQgaWQ9InMiIHgyPSIwIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYmJiIiBzdG9wLW9wYWNpdHk9Ii4xIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLW9wYWNpdHk9Ii4xIi8+PC9saW5lYXJHcmFkaWVudD48Y2xpcFBhdGggaWQ9InIiPjxyZWN0IHdpZHRoPSIxMDYiIGhlaWdodD0iMjAiIHJ4PSIzIiBmaWxsPSIjZmZmIi8+PC9jbGlwUGF0aD48ZyBjbGlwLXBhdGg9InVybCgjcikiPjxyZWN0IHdpZHRoPSIzNyIgaGVpZ2h0PSIyMCIgZmlsbD0iIzU1NSIvPjxyZWN0IHg9IjM3IiB3aWR0aD0iNjkiIGhlaWdodD0iMjAiIGZpbGw9IiMwMDdlYzYiLz48cmVjdCB3aWR0aD0iMTA2IiBoZWlnaHQ9IjIwIiBmaWxsPSJ1cmwoI3MpIi8+PC9nPjxnIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJWZXJkYW5hLEdlbmV2YSxEZWphVnUgU2FucyxzYW5zLXNlcmlmIiB0ZXh0LXJlbmRlcmluZz0iZ2VvbWV0cmljUHJlY2lzaW9uIiBmb250LXNpemU9IjExMCI+PHRleHQgYXJpYS1oaWRkZW49InRydWUiIHg9IjE5NSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iMjcwIj50b29sczwvdGV4dD48dGV4dCB4PSIxOTUiIHk9IjE0MCIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIGZpbGw9IiNmZmYiIHRleHRMZW5ndGg9IjI3MCI+dG9vbHM8L3RleHQ+PHRleHQgYXJpYS1oaWRkZW49InRydWUiIHg9IjcwNSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iNTkwIj5gciBuIHRvb2xzYDwvdGV4dD48dGV4dCB4PSI3MDUiIHk9IjE0MCIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIGZpbGw9IiNmZmYiIHRleHRMZW5ndGg9IjU5MCI+YHIgbiB0b29sc2A8L3RleHQ+PC9nPjwvc3ZnPg==" alt="Tools" /> <img src="data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2OCIgaGVpZ2h0PSIyMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJSOiDiiaUgNC4yLjAiPjx0aXRsZT5SOiDiiaUgNC4yLjA8L3RpdGxlPjxsaW5lYXJHcmFkaWVudCBpZD0icyIgeDI9IjAiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiYmIiIHN0b3Atb3BhY2l0eT0iLjEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3Atb3BhY2l0eT0iLjEiLz48L2xpbmVhckdyYWRpZW50PjxjbGlwUGF0aCBpZD0iciI+PHJlY3Qgd2lkdGg9IjY4IiBoZWlnaHQ9IjIwIiByeD0iMyIgZmlsbD0iI2ZmZiIvPjwvY2xpcFBhdGg+PGcgY2xpcC1wYXRoPSJ1cmwoI3IpIj48cmVjdCB3aWR0aD0iMTciIGhlaWdodD0iMjAiIGZpbGw9IiM1NTUiLz48cmVjdCB4PSIxNyIgd2lkdGg9IjUxIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDA3ZWM2Ii8+PHJlY3Qgd2lkdGg9IjY4IiBoZWlnaHQ9IjIwIiBmaWxsPSJ1cmwoI3MpIi8+PC9nPjxnIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJWZXJkYW5hLEdlbmV2YSxEZWphVnUgU2FucyxzYW5zLXNlcmlmIiB0ZXh0LXJlbmRlcmluZz0iZ2VvbWV0cmljUHJlY2lzaW9uIiBmb250LXNpemU9IjExMCI+PHRleHQgYXJpYS1oaWRkZW49InRydWUiIHg9Ijk1IiB5PSIxNTAiIGZpbGw9IiMwMTAxMDEiIGZpbGwtb3BhY2l0eT0iLjMiIHRyYW5zZm9ybT0ic2NhbGUoLjEpIiB0ZXh0TGVuZ3RoPSI3MCI+UjwvdGV4dD48dGV4dCB4PSI5NSIgeT0iMTQwIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgZmlsbD0iI2ZmZiIgdGV4dExlbmd0aD0iNzAiPlI8L3RleHQ+PHRleHQgYXJpYS1oaWRkZW49InRydWUiIHg9IjQxNSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iNDEwIj7iiaUgNC4yLjA8L3RleHQ+PHRleHQgeD0iNDE1IiB5PSIxNDAiIHRyYW5zZm9ybT0ic2NhbGUoLjEpIiBmaWxsPSIjZmZmIiB0ZXh0TGVuZ3RoPSI0MTAiPuKJpSA0LjIuMDwvdGV4dD48L2c+PC9zdmc+" alt="R" />
+<img src="data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3OCIgaGVpZ2h0PSIyMCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJsaWNlbnNlOiBNSVQiPjx0aXRsZT5saWNlbnNlOiBNSVQ8L3RpdGxlPjxsaW5lYXJHcmFkaWVudCBpZD0icyIgeDI9IjAiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiYmIiIHN0b3Atb3BhY2l0eT0iLjEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3Atb3BhY2l0eT0iLjEiLz48L2xpbmVhckdyYWRpZW50PjxjbGlwUGF0aCBpZD0iciI+PHJlY3Qgd2lkdGg9Ijc4IiBoZWlnaHQ9IjIwIiByeD0iMyIgZmlsbD0iI2ZmZiIvPjwvY2xpcFBhdGg+PGcgY2xpcC1wYXRoPSJ1cmwoI3IpIj48cmVjdCB3aWR0aD0iNDciIGhlaWdodD0iMjAiIGZpbGw9IiM1NTUiLz48cmVjdCB4PSI0NyIgd2lkdGg9IjMxIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDA3ZWM2Ii8+PHJlY3Qgd2lkdGg9Ijc4IiBoZWlnaHQ9IjIwIiBmaWxsPSJ1cmwoI3MpIi8+PC9nPjxnIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJWZXJkYW5hLEdlbmV2YSxEZWphVnUgU2FucyxzYW5zLXNlcmlmIiB0ZXh0LXJlbmRlcmluZz0iZ2VvbWV0cmljUHJlY2lzaW9uIiBmb250LXNpemU9IjExMCI+PHRleHQgYXJpYS1oaWRkZW49InRydWUiIHg9IjI0NSIgeT0iMTUwIiBmaWxsPSIjMDEwMTAxIiBmaWxsLW9wYWNpdHk9Ii4zIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgdGV4dExlbmd0aD0iMzcwIj5saWNlbnNlPC90ZXh0Pjx0ZXh0IHg9IjI0NSIgeT0iMTQwIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgZmlsbD0iI2ZmZiIgdGV4dExlbmd0aD0iMzcwIj5saWNlbnNlPC90ZXh0Pjx0ZXh0IGFyaWEtaGlkZGVuPSJ0cnVlIiB4PSI2MTUiIHk9IjE1MCIgZmlsbD0iIzAxMDEwMSIgZmlsbC1vcGFjaXR5PSIuMyIgdHJhbnNmb3JtPSJzY2FsZSguMSkiIHRleHRMZW5ndGg9IjIxMCI+TUlUPC90ZXh0Pjx0ZXh0IHg9IjYxNSIgeT0iMTQwIiB0cmFuc2Zvcm09InNjYWxlKC4xKSIgZmlsbD0iI2ZmZiIgdGV4dExlbmd0aD0iMjEwIj5NSVQ8L3RleHQ+PC9nPjwvc3ZnPg==" alt="License" /></p>
+<!-- badges: end -->
+
+<p>An <a href="https://modelcontextprotocol.io">MCP</a> server that
+exposes the <a href="https://transparency.entsoe.eu">ENTSO-E
+Transparency Platform</a> as tools for LLM-enabled applications such as
+Claude Desktop. Query European electricity market, load, generation,
+transmission, outages, and balancing data through natural language.</p>
+<p>Built in pure R on top of <a href="https://github.com/krose/entsoeapi"><code>entsoeapi</code></a> and
+<a href="https://github.com/posit-dev/mcptools"><code>mcptools</code></a>.
+Distributed as a Docker image — no R installation required for end
+users.</p>
+<p>Large time-series results are cached in an in-process
+<strong>DuckDB</strong> inside the container, so the LLM can aggregate,
+filter, and join via SQL without flooding its context window.</p>
+<hr />
+<h2 id="what-you-can-ask">What you can ask</h2>
+<blockquote>
+<p><em>“What was the actual electricity load in Germany on 3 January
+2025?”</em><br />
+<em>“Show me day-ahead prices for France and Germany last
+Monday.”</em><br />
+<em>“Which generation units in Belgium had unplanned outages this
+week?”</em><br />
+<em>“What is the installed solar capacity in the Netherlands in
+2024?”</em><br />
+<em>“Get the net transfer capacity from Germany to Poland for
+today.”</em></p>
+</blockquote>
+<hr />
+<h2 id="prerequisites">Prerequisites</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Requirement</th>
+<th>Purpose</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://docs.docker.com/get-docker/">Docker</a></td>
+<td>Runs the server container</td>
+<td>Any version that supports <code>docker run</code>.</td>
+</tr>
+<tr class="even">
+<td><a href="https://claude.ai/download">Claude Desktop</a></td>
+<td>MCP client</td>
+<td>or any MCP-compatible client</td>
+</tr>
+<tr class="odd">
+<td><a href="https://transparency.entsoe.eu/usrm/user/createPublicUser">ENTSO-E
+API token</a></td>
+<td>Access to the Transparency Platform</td>
+<td>Free registration; UUID v4 format.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-start">Quick start</h2>
+<h3 id="step-1--get-an-entso-e-api-token">Step 1 — Get an ENTSO-E API
+token</h3>
+<ol style="list-style-type: decimal">
+<li>Register at <a href="https://transparency.entsoe.eu/usrm/user/createPublicUser">transparency.entsoe.eu</a></li>
+<li>After logging in, go to <strong>My Account Settings → Web API
+Security Token</strong></li>
+<li>Generate a token — it looks like <a href="https://en.wikipedia.org/wiki/Universally_unique_identifier"><code>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code></a></li>
+</ol>
+<h3 id="step-2--pull-the-docker-image-using-cli">Step 2 — Pull the
+Docker image using CLI</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="ex">docker</span> pull sbudai/entsoeapi.mcp:latest</span></code></pre></div>
+<p>Or build from source (see <a href="#building-from-source">Building
+from source</a> below).</p>
+<h3 id="step-3--configure-mcp-server-settings-of-claude-desktop">Step 3
+— Configure MCP server settings of Claude Desktop</h3>
+<p>Open (or create) your Claude Desktop config file:</p>
+<ul>
+<li><strong>macOS / Linux</strong>:
+<code>~/.config/Claude/claude_desktop_config.json</code></li>
+<li><strong>Windows</strong>:
+<code>%APPDATA%\Claude\claude_desktop_config.json</code></li>
+</ul>
+<p>Add the <code>entsoe</code> entry under
+<code>&quot;mcpServers&quot;</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">&quot;mcpServers&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>    <span class="dt">&quot;entsoe&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>      <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;docker&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>      <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;run&quot;</span><span class="ot">,</span> <span class="st">&quot;--rm&quot;</span><span class="ot">,</span> <span class="st">&quot;-i&quot;</span><span class="ot">,</span> <span class="st">&quot;-e&quot;</span><span class="ot">,</span> <span class="st">&quot;ENTSOE_PAT&quot;</span><span class="ot">,</span> <span class="st">&quot;sbudai/entsoeapi.mcp:latest&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>      <span class="dt">&quot;env&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>        <span class="dt">&quot;ENTSOE_PAT&quot;</span><span class="fu">:</span> <span class="st">&quot;your-entsoe-api-token-here&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Key flags:</p>
+<ul>
+<li><code>--rm</code> — removes the container when the session ends (no
+container accumulation)</li>
+<li><code>-i</code> — keeps stdin open, required for MCP stdio
+transport</li>
+<li><code>-e ENTSOE_PAT</code> — forwards the token from Claude Desktop
+into the container</li>
+</ul>
+<h3 id="step-4--restart-claude-desktop-and-verify">Step 4 — Restart
+Claude Desktop and verify</h3>
+<p>Restart Claude Desktop to load the new MCP server configuration. You
+should see <strong>entsoe</strong> listed under the tools panel.</p>
+<p>Test with a simple query:</p>
+<blockquote>
+<p><em>“What is the EIC code for Germany?”</em></p>
+</blockquote>
+<p>Claude should call the <code>area_eic</code> tool and return a list
+of German bidding zones and control areas.</p>
+<hr />
+<h2 id="available-tools-29">Available tools (29)</h2>
+<p>The 21 time-series tools return a compact envelope pointing at a
+cached DuckDB table
+(<code>{table, rows, schema, preview, SQL hint}</code>). Use
+<code>sql_query</code> to aggregate or join. EIC lookup tools and
+<code>get_news</code> return CSV directly. All date parameters use
+<strong>CET timezone</strong> and <strong>YYYY-MM-DD
+format</strong>.</p>
+<h3 id="eic-lookup">EIC lookup</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>area_eic</code></td>
+<td>Bidding zones, control areas, member states — look up EIC codes by
+country name</td>
+</tr>
+<tr class="even">
+<td><code>party_eic</code></td>
+<td>Market participants (TSOs, traders, etc.)</td>
+</tr>
+<tr class="odd">
+<td><code>all_approved_eic</code></td>
+<td>All approved EIC codes across all types</td>
+</tr>
+<tr class="even">
+<td><code>resource_object_eic</code></td>
+<td>Generation units and other resource objects</td>
+</tr>
+<tr class="odd">
+<td><code>get_news</code></td>
+<td>Latest news and maintenance notices from ENTSO-E</td>
+</tr>
+</tbody>
+</table>
+<h3 id="load">Load</h3>
+<p>One tool with a <code>type</code> parameter:</p>
+<table>
+<thead>
+<tr class="header">
+<th><code>type</code> value</th>
+<th>ENTSO-E dataset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>actual</code> <em>(default)</em></td>
+<td>6.1.A</td>
+<td>Actual total load</td>
+</tr>
+<tr class="even">
+<td><code>day_ahead</code></td>
+<td>6.1.B</td>
+<td>Day-ahead total load forecast</td>
+</tr>
+<tr class="odd">
+<td><code>week_ahead</code></td>
+<td>6.1.C</td>
+<td>Week-ahead total load forecast</td>
+</tr>
+<tr class="even">
+<td><code>month_ahead</code></td>
+<td>6.1.D</td>
+<td>Month-ahead total load forecast</td>
+</tr>
+<tr class="odd">
+<td><code>year_ahead</code></td>
+<td>6.1.E</td>
+<td>Year-ahead total load forecast</td>
+</tr>
+<tr class="even">
+<td><code>margin</code></td>
+<td>8.1</td>
+<td>Year-ahead generation forecast margin</td>
+</tr>
+</tbody>
+</table>
+<h3 id="generation">Generation</h3>
+<p>One tool (<code>gen_time_series</code>) with a <code>type</code>
+parameter:</p>
+<table>
+<thead>
+<tr class="header">
+<th><code>type</code> value</th>
+<th>ENTSO-E dataset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>actual</code> <em>(default)</em></td>
+<td>16.1.B&amp;C</td>
+<td>Actual generation per production type</td>
+</tr>
+<tr class="even">
+<td><code>wind_solar</code></td>
+<td>14.1.D</td>
+<td>Day-ahead wind and solar forecast</td>
+</tr>
+<tr class="odd">
+<td><code>day_ahead</code></td>
+<td>14.1.C</td>
+<td>Day-ahead aggregated generation forecast</td>
+</tr>
+<tr class="even">
+<td><code>per_unit</code></td>
+<td>16.1.A</td>
+<td>Actual generation per generation unit <em>(slow)</em></td>
+</tr>
+<tr class="odd">
+<td><code>storage</code></td>
+<td>16.1.D</td>
+<td>Hydro reservoir / water storage filling rate</td>
+</tr>
+</tbody>
+</table>
+<h3 id="generation--installed-capacity">Generation — installed
+capacity</h3>
+<p>One tool (<code>gen_capacity</code>) with a <code>per_unit</code>
+parameter:</p>
+<table>
+<thead>
+<tr class="header">
+<th><code>per_unit</code> value</th>
+<th>ENTSO-E dataset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>FALSE</code> <em>(default)</em></td>
+<td>14.1.A</td>
+<td>aggregate by production type</td>
+</tr>
+<tr class="even">
+<td><code>TRUE</code></td>
+<td>14.1.C</td>
+<td>individual production unit level</td>
+</tr>
+</tbody>
+</table>
+<h3 id="market">Market</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>ENTSO-E dataset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>energy_prices</code></td>
+<td>12.1.D</td>
+<td>Day-ahead / intraday market clearing prices</td>
+</tr>
+<tr class="even">
+<td><code>intraday_prices</code></td>
+<td>12.1.D</td>
+<td>Intraday market prices</td>
+</tr>
+<tr class="odd">
+<td><code>net_transfer_capacities</code></td>
+<td>11.1</td>
+<td>NTC between two bidding zones</td>
+</tr>
+<tr class="even">
+<td><code>day_ahead_commercial_sched</code></td>
+<td>12.1.F</td>
+<td>Day-ahead commercial schedules</td>
+</tr>
+<tr class="odd">
+<td><code>explicit_offered_transfer_capacities</code></td>
+<td>12.1.A</td>
+<td>Explicit offered transfer capacities</td>
+</tr>
+<tr class="even">
+<td><code>flow_based_allocations</code></td>
+<td>12.1.B</td>
+<td>Flow-based allocations for CWE/Core region</td>
+</tr>
+<tr class="odd">
+<td><code>congestion_income</code></td>
+<td>12.1.G</td>
+<td>Congestion income</td>
+</tr>
+<tr class="even">
+<td><code>allocated_transfer_capacities_3rd_countries</code></td>
+<td>12.1.C</td>
+<td>Allocated transfer capacities on third-country borders</td>
+</tr>
+</tbody>
+</table>
+<h3 id="transmission">Transmission</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>ENTSO-E dataset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>cross_border_physical_flows</code></td>
+<td>12.1.G</td>
+<td>Physical cross-border flows</td>
+</tr>
+<tr class="even">
+<td><code>total_commercial_sched</code></td>
+<td>12.1.F</td>
+<td>Total commercial schedules</td>
+</tr>
+<tr class="odd">
+<td><code>net_positions</code></td>
+<td>12.1.H</td>
+<td>Net positions</td>
+</tr>
+<tr class="even">
+<td><code>forecasted_transfer_capacities</code></td>
+<td>11.1</td>
+<td>Forecasted transfer capacities</td>
+</tr>
+</tbody>
+</table>
+<h3 id="outages">Outages</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>ENTSO-E dataset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>outages_gen_units</code></td>
+<td>15.1.A&amp;B</td>
+<td>Unavailability of generation units</td>
+</tr>
+<tr class="even">
+<td><code>outages_prod_units</code></td>
+<td>15.1.C&amp;D</td>
+<td>Unavailability of production units</td>
+</tr>
+<tr class="odd">
+<td><code>outages_transmission_grid</code></td>
+<td>15.1.A&amp;B</td>
+<td>Unavailability in the transmission grid</td>
+</tr>
+</tbody>
+</table>
+<h3 id="balancing">Balancing</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>ENTSO-E dataset</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>imbalance_prices</code></td>
+<td>17.1.D</td>
+<td>Imbalance prices</td>
+</tr>
+<tr class="even">
+<td><code>imbalance_volumes</code></td>
+<td>17.1.C</td>
+<td>Imbalance volumes</td>
+</tr>
+<tr class="odd">
+<td><code>contracted_reserves</code></td>
+<td>17.1.B</td>
+<td>Contracted balancing reserves</td>
+</tr>
+</tbody>
+</table>
+<h3 id="session-duckdb-cache">Session DuckDB cache</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Tool</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sql_query</code></td>
+<td>Run a SQL query (DuckDB dialect) against cached tables. Returns CSV,
+capped at <code>max_rows</code> (default 100).</td>
+</tr>
+<tr class="even">
+<td><code>list_tables</code></td>
+<td>List every cached table in this session with row counts and column
+schemas.</td>
+</tr>
+<tr class="odd">
+<td><code>describe_table</code></td>
+<td>Schema + row count + N sample rows for one named table.</td>
+</tr>
+</tbody>
+</table>
+<p>Every time-series tool inserts its full result into an in-memory
+DuckDB table and returns an envelope:</p>
+<pre><code># table: load_actual_a3f7d2
+# rows: 8760
+# columns: dt_start TIMESTAMP, value DOUBLE, area_name VARCHAR
+# preview (first 5 rows):
+dt_start,value,area_name
+2024-01-01 00:00:00,42500,Germany
+2024-01-01 01:00:00,42200,Germany
+2024-01-01 02:00:00,41800,Germany
+2024-01-01 03:00:00,41500,Germany
+2024-01-01 04:00:00,41700,Germany
+# hint: SELECT date_trunc(&#39;week&#39;, dt_start) AS wk, AVG(value) FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1</code></pre>
+<p>The cache lives for the lifetime of one Claude Desktop session (the
+<code>docker run --rm -i</code> container). Identical queries within a
+session reuse the same table — no second API hit.</p>
+<p><strong>Example workflow</strong> Claude would run for <em>“Weekly
+average German load for January 2024”</em>:</p>
+<ol style="list-style-type: decimal">
+<li><code>area_eic(query = &quot;Germany&quot;)</code> — resolve EIC code</li>
+<li><code>load(eic = &quot;10Y...&quot;, period_start = &quot;2024-01-01&quot;, period_end = &quot;2024-01-31&quot;)</code>
+— envelope with <code>table = load_actual_a3f7d2</code></li>
+<li><code>sql_query(sql = &quot;SELECT date_trunc(&#39;week&#39;, dt_start) AS wk, AVG(value)::INT AS avg_mw FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1&quot;)</code>
+— 5 weekly rows instead of 744 hourly rows</li>
+</ol>
+<hr />
+<h2 id="tips-for-good-results">Tips for good results</h2>
+<ul>
+<li><strong>Always call <code>area_eic</code> first</strong> to resolve
+a country name to its EIC code before querying data. Many countries have
+multiple bidding zones (e.g. Norway has NO1–NO5).</li>
+<li><strong>Fetch generously, aggregate via SQL.</strong> The 100-row
+cap only applies to <code>sql_query</code> output — the cached DuckDB
+table holds the full result. Fetch a month or year of data once, then
+aggregate down to weekly / daily values via
+<code>sql_query(...)</code>.</li>
+<li><strong>For generation time-series</strong>, omit
+<code>gen_type</code> to get all production types, or filter with codes
+like <code>B16</code> (Solar) or <code>B18</code> (Wind offshore).</li>
+</ul>
+<h2 id="data-notes">Data notes</h2>
+<ul>
+<li><strong>Timezone</strong>: All dates are interpreted as CET (Central
+European Time; UTC+1 / UTC+2 in summer) regardless of your local
+timezone.</li>
+<li><strong>Resolution</strong>: Load and generation data is typically
+at 15-minute or 1-hour intervals</li>
+<li><strong>Row cap</strong>: Results are capped at 100 rows per call. A
+truncation notice is appended when data is cut. Use short date ranges
+(1–7 days) to avoid truncation</li>
+<li><strong>Max range</strong>: Most time-series tools accept up to 1
+year per query</li>
+<li><strong>EIC codes</strong>: Use <code>area_eic</code> to resolve
+country or zone names to EIC codes before querying data</li>
+</ul>
+<hr />
+<h2 id="alternative-native-r-no-docker">Alternative: native R (no
+Docker)</h2>
+<p>If you already have R ≥ 4.2.0 installed:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Install dependencies</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">&quot;install.packages(&#39;pak&#39;); pak::pkg_install(c(&#39;krose/entsoeapi&#39;, &#39;posit-dev/mcptools&#39;, &#39;ellmer&#39;, &#39;lubridate&#39;, &#39;jsonlite&#39;))&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># Install this package</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL /path/to/entsoeapi.mcp</span></code></pre></div>
+<p>Then in <code>claude_desktop_config.json</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="dt">&quot;mcpServers&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>    <span class="dt">&quot;entsoe&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>      <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;Rscript&quot;</span><span class="fu">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>      <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;-e&quot;</span><span class="ot">,</span> <span class="st">&quot;entsoeapi.mcp::run()&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>      <span class="dt">&quot;env&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>        <span class="dt">&quot;ENTSOE_PAT&quot;</span><span class="fu">:</span> <span class="st">&quot;your-entsoe-api-token-here&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<hr />
+<h2 id="building-from-source">Building from source</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/sbudai/entsoeapi.mcp.git</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="bu">cd</span> entsoeapi.mcp</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># Build the Docker image</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="ex">docker</span> build <span class="at">-t</span> sbudai/entsoeapi.mcp:latest .</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co"># Verify the server starts and responds to MCP initialize</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&#39;{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;id&quot;:1,&quot;method&quot;:&quot;initialize&quot;,&quot;params&quot;:{&quot;protocolVersion&quot;:&quot;2024-11-05&quot;,&quot;capabilities&quot;:{},&quot;clientInfo&quot;:{&quot;name&quot;:&quot;test&quot;,&quot;version&quot;:&quot;0&quot;}}}&#39;</span> <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">docker</span> run <span class="at">--rm</span> <span class="at">-i</span> <span class="at">-e</span> ENTSOE_PAT=test sbudai/entsoeapi.mcp:latest</span></code></pre></div>
+<p>The image is based on <a href="https://rocker-project.org"><code>rocker/r-ver:4.4.3</code></a>,
+uses <a href="https://packagemanager.posit.co">Posit Public Package
+Manager</a> for pre-built Linux binaries, and runs as a non-root
+<code>mcp</code> user.</p>
+<hr />
+<h2 id="testing">Testing</h2>
+<p>The package ships with <strong>90 unit tests</strong> that exercise
+every tool wrapper, every dispatch branch, and every utility — yielding
+<strong>99% line coverage</strong> across <code>R/run.R</code>,
+<code>R/tools.R</code>, and <code>R/utils.R</code>.</p>
+<p>Run the suite locally:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Plain run (fast)</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>pkgload<span class="sc">::</span><span class="fu">load_all</span>()</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>testthat<span class="sc">::</span><span class="fu">test_dir</span>(<span class="st">&quot;tests/testthat&quot;</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co"># With coverage report</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>covr<span class="sc">::</span><span class="fu">package_coverage</span>() <span class="sc">|&gt;</span> covr<span class="sc">::</span><span class="fu">report</span>()</span></code></pre></div>
+<p>Tests are network-free: every <code>entsoeapi::*</code> call is
+mocked at the package’s <em>imports environment</em> via a small
+<code>.with_imp_bindings()</code> helper, and <code>safe_to_csv()</code>
+is mocked in the namespace via
+<code>testthat::with_mocked_bindings(.package = &quot;entsoeapi.mcp&quot;)</code>.
+This lets the suite run in CI without an <code>ENTSOE_PAT</code> token
+and without hitting the Transparency Platform.</p>
+<hr />
+<h2 id="repository-structure">Repository structure</h2>
+<pre><code>entsoeapi.mcp/
+├── Dockerfile            # Self-contained runtime image
+├── DESCRIPTION           # Package metadata and dependencies
+├── NAMESPACE             # Exported functions (generated by roxygen2)
+├── LICENSE               # MIT
+├── NEWS.md               # What has changed in each version
+├── README.md             # GitHub standard version of README.Rmd
+├── README.Rmd            # Comprehensive introduction of the project
+├── RELEASE_CHECKLIST     # What to check during launching a new version
+├── R/
+|   ├── run.R             # Entry point: run() → mcp_server(tools = all_tools())
+|   ├── tools.R           # All 29 ellmer::tool() definitions
+|   ├── utils.R           # parse_date(), slim_ts(), safe_to_csv(), safe_to_cache()
+|   └── db.R              # In-memory DuckDB singleton + sql_query / list / describe helpers
+├── tests
+|   ├── testthat.R        # Test framework helper
+|   └── testthat
+|       ├── test-run.R    # Unit tests of run.R (8 tests)
+|       ├── test-tools.R  # Unit tests of tools.R (47 tests)
+|       ├── test-utils.R  # Unit tests of utils.R (14 tests)
+|       └── test-db.R     # Unit tests of db.R (21 tests)
+├── man
+|   └── run.Rd            # Documentation of functions in R/run.R
+└── .github/
+    ├── pull_request_template.md
+    └── ISSUE_TEMPLATE
+       ├── bug_report.md
+       └── feature_request.md</code></pre>
+<h3 id="token-budget-design">Token budget design</h3>
+<p>Tool results from the 21 time-series tools are inserted into an
+in-process <strong>DuckDB</strong> (in-memory, per session) and the LLM
+gets a compact envelope back — table name, row count, column schema, a
+5-row preview, and an SQL hint. The LLM then issues SQL via
+<code>sql_query</code> to aggregate, filter, or join inside the
+container, so only the <em>aggregated</em> result ever reaches the
+prompt context. <code>slim_ts()</code> still drops constant metadata
+columns before insertion to save memory and preview tokens. The 5 EIC
+lookup tools and <code>get_news</code> keep their direct-CSV path
+because they’re small and interactive.</p>
+<hr />
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>R ≥ 4.2.0</li>
+<li><a href="https://github.com/krose/entsoeapi"><code>entsoeapi</code></a>
+(GitHub)</li>
+<li><a href="https://github.com/posit-dev/mcptools"><code>mcptools</code></a>
+(GitHub)</li>
+<li><code>ellmer</code>, <code>lubridate</code>, <code>jsonlite</code>,
+<code>duckdb</code>, <code>DBI</code>, <code>digest</code> (CRAN)</li>
+</ul>
+<hr />
+<h2 id="license">License</h2>
+<p>MIT © Sándor Budai. See <a href="LICENSE">LICENSE</a>.</p>
+<p>The underlying data is provided by <a href="https://www.entsoe.eu">ENTSO-E</a> under their <a href="https://transparency.entsoe.eu/content/static_content/Static%20content/terms%20and%20conditions/terms%20and%20conditions.html">terms
+of use</a>.</p>
+
+</body>
+</html>

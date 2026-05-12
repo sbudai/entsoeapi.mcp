@@ -123,6 +123,11 @@ all_tools <- function() {
     # Balancing
     tool_imbalance_prices,
     tool_imbalance_volumes,
-    tool_contracted_reserves
+    tool_contracted_reserves,
+
+    # Session DuckDB cache
+    tool_sql_query,
+    tool_list_tables,
+    tool_describe_table
   )
 }

@@ -24,6 +24,10 @@ Built in pure R on top of
 [`mcptools`](https://github.com/posit-dev/mcptools). Distributed as a
 Docker image — no R installation required for end users.
 
+Large time-series results are cached in an in-process **DuckDB** inside
+the container, so the LLM can aggregate, filter, and join via SQL
+without flooding its context window.
+
 ------------------------------------------------------------------------
 
 ## What you can ask
@@ -40,11 +44,11 @@ Docker image — no R installation required for end users.
 
 ## Prerequisites
 
-| Requirement | Purpose | Notes |
-|----|----|----|
-| [Docker](https://docs.docker.com/get-docker/) | Runs the server container | Any version that supports `docker run`. |
-| [Claude Desktop](https://claude.ai/download) | MCP client | or any MCP-compatible client |
-| [ENTSO-E API token](https://transparency.entsoe.eu/usrm/user/createPublicUser) | Access to the Transparency Platform | Free registration; UUID v4 format. |
+| Requirement                                                                    | Purpose                             | Notes                                   |
+|--------------------------------------------------------------------------------|-------------------------------------|-----------------------------------------|
+| [Docker](https://docs.docker.com/get-docker/)                                  | Runs the server container           | Any version that supports `docker run`. |
+| [Claude Desktop](https://claude.ai/download)                                   | MCP client                          | or any MCP-compatible client            |
+| [ENTSO-E API token](https://transparency.entsoe.eu/usrm/user/createPublicUser) | Access to the Transparency Platform | Free registration; UUID v4 format.      |
 
 ------------------------------------------------------------------------
 
@@ -113,21 +117,23 @@ bidding zones and control areas.
 
 ------------------------------------------------------------------------
 
-## Available tools (26)
+## Available tools (29)
 
-All tools return results as CSV (with a truncation notice if capped at
-100 rows). All date parameters use **CET timezone** and **YYYY-MM-DD
+The 21 time-series tools return a compact envelope pointing at a cached
+DuckDB table (`{table, rows, schema, preview, SQL hint}`). Use
+`sql_query` to aggregate or join. EIC lookup tools and `get_news` return
+CSV directly. All date parameters use **CET timezone** and **YYYY-MM-DD
 format**.
 
 ### EIC lookup
 
-| Tool | Description |
-|----|----|
-| `area_eic` | Bidding zones, control areas, member states — look up EIC codes by country name |
-| `party_eic` | Market participants (TSOs, traders, etc.) |
-| `all_approved_eic` | All approved EIC codes across all types |
-| `resource_object_eic` | Generation units and other resource objects |
-| `get_news` | Latest news and maintenance notices from ENTSO-E |
+| Tool                  | Description                                                                     |
+|-----------------------|---------------------------------------------------------------------------------|
+| `area_eic`            | Bidding zones, control areas, member states — look up EIC codes by country name |
+| `party_eic`           | Market participants (TSOs, traders, etc.)                                       |
+| `all_approved_eic`    | All approved EIC codes across all types                                         |
+| `resource_object_eic` | Generation units and other resource objects                                     |
+| `get_news`            | Latest news and maintenance notices from ENTSO-E                                |
 
 ### Load
 
@@ -146,13 +152,13 @@ One tool with a `type` parameter:
 
 One tool (`gen_time_series`) with a `type` parameter:
 
-| `type` value | ENTSO-E dataset | Description |
-|----|----|----|
-| `actual` *(default)* | 16.1.B&C | Actual generation per production type |
-| `wind_solar` | 14.1.D | Day-ahead wind and solar forecast |
-| `day_ahead` | 14.1.C | Day-ahead aggregated generation forecast |
-| `per_unit` | 16.1.A | Actual generation per generation unit *(slow)* |
-| `storage` | 16.1.D | Hydro reservoir / water storage filling rate |
+| `type` value         | ENTSO-E dataset | Description                                    |
+|----------------------|-----------------|------------------------------------------------|
+| `actual` *(default)* | 16.1.B&C        | Actual generation per production type          |
+| `wind_solar`         | 14.1.D          | Day-ahead wind and solar forecast              |
+| `day_ahead`          | 14.1.C          | Day-ahead aggregated generation forecast       |
+| `per_unit`           | 16.1.A          | Actual generation per generation unit *(slow)* |
+| `storage`            | 16.1.D          | Hydro reservoir / water storage filling rate   |
 
 ### Generation — installed capacity
 
@@ -165,33 +171,33 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 
 ### Market
 
-| Tool | ENTSO-E dataset | Description |
-|----|----|----|
-| `energy_prices` | 12.1.D | Day-ahead / intraday market clearing prices |
-| `intraday_prices` | 12.1.D | Intraday market prices |
-| `net_transfer_capacities` | 11.1 | NTC between two bidding zones |
-| `day_ahead_commercial_sched` | 12.1.F | Day-ahead commercial schedules |
-| `explicit_offered_transfer_capacities` | 12.1.A | Explicit offered transfer capacities |
-| `flow_based_allocations` | 12.1.B | Flow-based allocations for CWE/Core region |
-| `congestion_income` | 12.1.G | Congestion income |
-| `allocated_transfer_capacities_3rd_countries` | 12.1.C | Allocated transfer capacities on third-country borders |
+| Tool                                          | ENTSO-E dataset | Description                                            |
+|-----------------------------------------------|-----------------|--------------------------------------------------------|
+| `energy_prices`                               | 12.1.D          | Day-ahead / intraday market clearing prices            |
+| `intraday_prices`                             | 12.1.D          | Intraday market prices                                 |
+| `net_transfer_capacities`                     | 11.1            | NTC between two bidding zones                          |
+| `day_ahead_commercial_sched`                  | 12.1.F          | Day-ahead commercial schedules                         |
+| `explicit_offered_transfer_capacities`        | 12.1.A          | Explicit offered transfer capacities                   |
+| `flow_based_allocations`                      | 12.1.B          | Flow-based allocations for CWE/Core region             |
+| `congestion_income`                           | 12.1.G          | Congestion income                                      |
+| `allocated_transfer_capacities_3rd_countries` | 12.1.C          | Allocated transfer capacities on third-country borders |
 
 ### Transmission
 
-| Tool | ENTSO-E dataset | Description |
-|----|----|----|
-| `cross_border_physical_flows` | 12.1.G | Physical cross-border flows |
-| `total_commercial_sched` | 12.1.F | Total commercial schedules |
-| `net_positions` | 12.1.H | Net positions |
-| `forecasted_transfer_capacities` | 11.1 | Forecasted transfer capacities |
+| Tool                             | ENTSO-E dataset | Description                    |
+|----------------------------------|-----------------|--------------------------------|
+| `cross_border_physical_flows`    | 12.1.G          | Physical cross-border flows    |
+| `total_commercial_sched`         | 12.1.F          | Total commercial schedules     |
+| `net_positions`                  | 12.1.H          | Net positions                  |
+| `forecasted_transfer_capacities` | 11.1            | Forecasted transfer capacities |
 
 ### Outages
 
-| Tool | ENTSO-E dataset | Description |
-|----|----|----|
-| `outages_gen_units` | 15.1.A&B | Unavailability of generation units |
-| `outages_prod_units` | 15.1.C&D | Unavailability of production units |
-| `outages_transmission_grid` | 15.1.A&B | Unavailability in the transmission grid |
+| Tool                        | ENTSO-E dataset | Description                             |
+|-----------------------------|-----------------|-----------------------------------------|
+| `outages_gen_units`         | 15.1.A&B        | Unavailability of generation units      |
+| `outages_prod_units`        | 15.1.C&D        | Unavailability of production units      |
+| `outages_transmission_grid` | 15.1.A&B        | Unavailability in the transmission grid |
 
 ### Balancing
 
@@ -201,6 +207,42 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 | `imbalance_volumes`   | 17.1.C          | Imbalance volumes             |
 | `contracted_reserves` | 17.1.B          | Contracted balancing reserves |
 
+### Session DuckDB cache
+
+| Tool             | Description                                                                                              |
+|------------------|----------------------------------------------------------------------------------------------------------|
+| `sql_query`      | Run a SQL query (DuckDB dialect) against cached tables. Returns CSV, capped at `max_rows` (default 100). |
+| `list_tables`    | List every cached table in this session with row counts and column schemas.                              |
+| `describe_table` | Schema + row count + N sample rows for one named table.                                                  |
+
+Every time-series tool inserts its full result into an in-memory DuckDB
+table and returns an envelope:
+
+    # table: load_actual_a3f7d2
+    # rows: 8760
+    # columns: dt_start TIMESTAMP, value DOUBLE, area_name VARCHAR
+    # preview (first 5 rows):
+    dt_start,value,area_name
+    2024-01-01 00:00:00,42500,Germany
+    2024-01-01 01:00:00,42200,Germany
+    2024-01-01 02:00:00,41800,Germany
+    2024-01-01 03:00:00,41500,Germany
+    2024-01-01 04:00:00,41700,Germany
+    # hint: SELECT date_trunc('week', dt_start) AS wk, AVG(value) FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1
+
+The cache lives for the lifetime of one Claude Desktop session (the
+`docker run --rm -i` container). Identical queries within a session
+reuse the same table — no second API hit.
+
+**Example workflow** Claude would run for *“Weekly average German load
+for January 2024”*:
+
+1.  `area_eic(query = "Germany")` — resolve EIC code
+2.  `load(eic = "10Y...", period_start = "2024-01-01", period_end = "2024-01-31")`
+    — envelope with `table = load_actual_a3f7d2`
+3.  `sql_query(sql = "SELECT date_trunc('week', dt_start) AS wk, AVG(value)::INT AS avg_mw FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1")`
+    — 5 weekly rows instead of 744 hourly rows
+
 ------------------------------------------------------------------------
 
 ## Tips for good results
@@ -208,9 +250,10 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 - **Always call `area_eic` first** to resolve a country name to its EIC
   code before querying data. Many countries have multiple bidding zones
   (e.g. Norway has NO1–NO5).
-- **Use short date ranges** (1–7 days). ENTSO-E data is at 15-minute to
-  1-hour resolution — a full week produces ~672 rows. Results are capped
-  at 100 rows with a truncation notice.
+- **Fetch generously, aggregate via SQL.** The 100-row cap only applies
+  to `sql_query` output — the cached DuckDB table holds the full result.
+  Fetch a month or year of data once, then aggregate down to weekly /
+  daily values via `sql_query(...)`.
 - **For generation time-series**, omit `gen_type` to get all production
   types, or filter with codes like `B16` (Solar) or `B18` (Wind
   offshore).
@@ -283,8 +326,8 @@ binaries, and runs as a non-root `mcp` user.
 
 ## Testing
 
-The package ships with **68 unit tests** that exercise every tool
-wrapper, every dispatch branch, and every utility — yielding **100% line
+The package ships with **90 unit tests** that exercise every tool
+wrapper, every dispatch branch, and every utility — yielding **99% line
 coverage** across `R/run.R`, `R/tools.R`, and `R/utils.R`.
 
 Run the suite locally:
@@ -320,14 +363,16 @@ the Transparency Platform.
     ├── RELEASE_CHECKLIST     # What to check during launching a new version
     ├── R/
     |   ├── run.R             # Entry point: run() → mcp_server(tools = all_tools())
-    |   ├── tools.R           # All 26 ellmer::tool() definitions
-    |   └── utils.R           # parse_date(), slim_ts(), safe_to_csv()
+    |   ├── tools.R           # All 29 ellmer::tool() definitions
+    |   ├── utils.R           # parse_date(), slim_ts(), safe_to_csv(), safe_to_cache()
+    |   └── db.R              # In-memory DuckDB singleton + sql_query / list / describe helpers
     ├── tests
     |   ├── testthat.R        # Test framework helper
     |   └── testthat
-    |       ├── test-run.R    # Unit tests of run.R (13 tests)
-    |       ├── test-tools.R  # Unit tests of tools.R (95 tests)
-    |       └── test-utils.R  # Unit tests of utils.R (26 tests)
+    |       ├── test-run.R    # Unit tests of run.R (8 tests)
+    |       ├── test-tools.R  # Unit tests of tools.R (47 tests)
+    |       ├── test-utils.R  # Unit tests of utils.R (14 tests)
+    |       └── test-db.R     # Unit tests of db.R (21 tests)
     ├── man
     |   └── run.Rd            # Documentation of functions in R/run.R
     └── .github/
@@ -338,11 +383,15 @@ the Transparency Platform.
 
 ### Token budget design
 
-Tool results are returned as **CSV** (not JSON) to reduce per-row key
-repetition, cutting output size 60–70% for wide time-series frames.
-Constant metadata columns (domain names, unit labels) are dropped
-automatically by `slim_ts()`. Results are hard-capped at 100 rows with a
-truncation notice so the LLM always knows when data is partial.
+Tool results from the 21 time-series tools are inserted into an
+in-process **DuckDB** (in-memory, per session) and the LLM gets a
+compact envelope back — table name, row count, column schema, a 5-row
+preview, and an SQL hint. The LLM then issues SQL via `sql_query` to
+aggregate, filter, or join inside the container, so only the
+*aggregated* result ever reaches the prompt context. `slim_ts()` still
+drops constant metadata columns before insertion to save memory and
+preview tokens. The 5 EIC lookup tools and `get_news` keep their
+direct-CSV path because they’re small and interactive.
 
 ------------------------------------------------------------------------
 
@@ -351,7 +400,7 @@ truncation notice so the LLM always knows when data is partial.
 - R ≥ 4.2.0
 - [`entsoeapi`](https://github.com/krose/entsoeapi) (GitHub)
 - [`mcptools`](https://github.com/posit-dev/mcptools) (GitHub)
-- `ellmer`, `lubridate`, `jsonlite` (CRAN)
+- `ellmer`, `lubridate`, `jsonlite`, `duckdb`, `DBI`, `digest` (CRAN)
 
 ------------------------------------------------------------------------
 

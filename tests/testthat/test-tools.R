@@ -271,6 +271,10 @@ testthat::test_that(
           force(df)
           "csv"
         },
+        safe_to_cache = \(df, ...) {
+          force(df)
+          "csv"
+        },
         .package = "entsoeapi.mcp",
         entsoeapi.mcp:::tool_gen_capacity(
           eic = "X",
@@ -307,6 +311,10 @@ testthat::test_that(
           force(df)
           "csv"
         },
+        safe_to_cache = \(df, ...) {
+          force(df)
+          "csv"
+        },
         .package = "entsoeapi.mcp",
         entsoeapi.mcp:::tool_gen_capacity(
           eic = "X",
@@ -333,6 +341,10 @@ testthat::test_that(
       ),
       expr = testthat::with_mocked_bindings(
         safe_to_csv = \(df, ...) {
+          force(df)
+          "csv"
+        },
+        safe_to_cache = \(df, ...) {
           force(df)
           "csv"
         },
@@ -366,6 +378,10 @@ testthat::test_that(
       ),
       expr = testthat::with_mocked_bindings(
         safe_to_csv = \(df, ...) {
+          force(df)
+          "csv"
+        },
+        safe_to_cache = \(df, ...) {
           force(df)
           "csv"
         },
@@ -409,6 +425,10 @@ testthat::test_that(
     bindings = bindings,
     expr = testthat::with_mocked_bindings(
       safe_to_csv = \(df, ...) {
+        force(df)
+        "csv"
+      },
+      safe_to_cache = \(df, ...) {
         force(df)
         "csv"
       },
