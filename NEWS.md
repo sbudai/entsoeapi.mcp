@@ -4,6 +4,37 @@ editor_options:
     wrap: 80
 ---
 
+# entsoeapi.mcp 0.3.1
+
+## Bug fix
+
+- **Tool error resilience**: API errors (invalid EIC code, missing token, HTTP
+  failures) previously propagated as unhandled R exceptions, causing Claude
+  Desktop to show "Failed to call tool". The `mute_stdout_tool()` wrapper now
+  catches these errors via `tryCatch` and returns a `# error: <message>` text
+  string so the LLM can read the message and self-correct (e.g. by calling
+  `area_eic` first to obtain a valid EIC code).
+
+## LLM guidance improvements
+
+- **`sql_querymax_rows` guidance**: the tool description now explains when to
+  raise `max_rows` beyond the 100-row default — e.g. `max_rows = 800` for one
+  month of hourly data, `max_rows = 3000` for 15-min data — while recommending
+  that values above 5000 be avoided to prevent filling the context window. The
+  `max_rows` argument description notes that the 100-row default is intentional:
+  it encourages `GROUP BY` aggregation inside DuckDB rather than bulk dumps
+  through the JSON-RPC pipe.
+
+## Internal
+
+- Completed roxygen2 `@param` descriptions for all internal helper functions
+  that previously had bare (empty) `@param` tags: `.eic_filter()`,
+  `.format_envelope()`, `.detect_multi_series()`, `.build_hint()`.
+
+## Compatibility
+
+- No tool signatures, return types, tool count, or runtime dependencies change.
+
 # entsoeapi.mcp 0.3.0
 
 ## LLM-usability fixes for the DuckDB cache

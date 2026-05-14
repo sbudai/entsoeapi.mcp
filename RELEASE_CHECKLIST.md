@@ -32,12 +32,12 @@
 
 ## 5. Docker Image
 
-- [ ] `docker build -t sbudai/entsoeapi.mcp:vX.Y.Z -t sbudai/entsoeapi.mcp:vX.Y.Z .` — builds without errors
+- [ ] `docker build -t sbudai/entsoeapi.mcp:latest -t sbudai/entsoeapi.mcp:vX.Y.Z .` — builds without errors
 - [ ] Smoke-test the image responds to an MCP `initialize` request using CLI:\
-  `echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}' | docker run --rm -i -e ENTSOE_PAT=test sbudai/entsoeapi.mcp:vX.Y.Z`
+  `echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}' | docker run --rm -i -e ENTSOE_PAT=test sbudai/entsoeapi.mcp:latest`
 - [ ] Exercise at least one live tool call end-to-end from Claude Desktop against the new image with a real `ENTSOE_PAT`
 - [ ] Image size is reasonable (check with `docker images sbudai/entsoeapi.mcp`)
-- [ ] Image runs as non-root `mcp` user (`docker run --rm sbudai/entsoeapi.mcp:vX.Y.Z id`)
+- [ ] Image runs as non-root `mcp` user (`docker run --rm sbudai/entsoeapi.mcp:latest id`)
 
 ## 6. Merge & Tag
 

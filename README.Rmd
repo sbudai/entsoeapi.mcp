@@ -67,7 +67,7 @@ Large time-series results are cached in an in-process **DuckDB** inside the cont
 | Requirement | Purpose | Notes |
 |------------------------|------------------------|------------------------|
 | [Docker](https://docs.docker.com/get-docker/) | Runs the server container | Any version that supports `docker run`. |
-| [Claude Desktop](https://claude.ai/download) | MCP client | or any MCP-compatible client |
+| [Claude Desktop](https://claude.com/download) | MCP client | or any MCP-compatible client |
 | [ENTSO-E API token](https://transparency.entsoe.eu/usrm/user/createPublicUser) | Access to the Transparency Platform | Free registration; UUID v4 format. |
 
 ------------------------------------------------------------------------
@@ -88,12 +88,12 @@ docker pull sbudai/entsoeapi.mcp:latest
 
 Or build from source (see [Building from source](#building-from-source) below).
 
-### Step 3 — Configure MCP server settings of Claude Desktop 
+### Step 3 — Configure MCP server settings of Claude Desktop
 
 Open (or create) your Claude Desktop config file:
 
--   **macOS / Linux**: `~/.config/Claude/claude_desktop_config.json`
--   **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS / Linux**: `~/.config/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 Add the `entsoe` entry under `"mcpServers"`:
 
@@ -113,9 +113,9 @@ Add the `entsoe` entry under `"mcpServers"`:
 
 Key flags:
 
--   `--rm` — removes the container when the session ends (no container accumulation)
--   `-i` — keeps stdin open, required for MCP stdio transport
--   `-e ENTSOE_PAT` — forwards the token from Claude Desktop into the container
+- `--rm` — removes the container when the session ends (no container accumulation)
+- `-i` — keeps stdin open, required for MCP stdio transport
+- `-e ENTSOE_PAT` — forwards the token from Claude Desktop into the container
 
 ### Step 4 — Restart Claude Desktop and verify
 
@@ -182,7 +182,7 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 | Tool | ENTSO-E dataset | Description |
 |------------------------|------------------------|------------------------|
 | `energy_prices` | 12.1.D | Day-ahead / intraday market clearing prices |
-| `intraday_prices` | 12.1.D | Intraday market prices |
+| `intraday_prices` | 12.1.D | intraday market prices |
 | `net_transfer_capacities` | 11.1 | NTC between two bidding zones |
 | `day_ahead_commercial_sched` | 12.1.F | Day-ahead commercial schedules |
 | `explicit_offered_transfer_capacities` | 12.1.A | Explicit offered transfer capacities |
@@ -217,15 +217,15 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 
 ### Session DuckDB cache
 
-| Tool             | Description                                                                                                            |
-|------------------|------------------------------------------------------------------------------------------------------------------------|
-| `sql_query`      | Run a SQL query (DuckDB dialect) against cached tables. Returns CSV, capped at `max_rows` (default 100).               |
-| `list_tables`    | List every cached table in this session with row counts and column schemas.                                            |
-| `describe_table` | Schema + row count + N sample rows for one named table.                                                                |
+| Tool | Description |
+|---------------|---------------------------------------------------------|
+| `sql_query` | Run a SQL query (DuckDB dialect) against cached tables. Returns CSV, capped at `max_rows` (default 100). Raise the cap for plotting (e.g. 800 for monthly hourly data); avoid values above 5000. |
+| `list_tables` | List every cached table in this session with row counts and column schemas. |
+| `describe_table` | Schema + row count + N sample rows for one named table. |
 
 Every time-series tool inserts its full result into an in-memory DuckDB table and returns an envelope. The envelope tells Claude — in every call — that statistics must be computed via `sql_query`, never from the schema sample, and warns when multiple `TimeSeries` (e.g. day-ahead Sequence 1 vs. Sequence 2) are stacked together in one cached table:
 
-```
+```         
 # table: energy_prices_a3f7d2
 # rows: 336
 # columns: dt_start TIMESTAMP, price DOUBLE, sequence INTEGER
@@ -263,17 +263,17 @@ The cache lives for the lifetime of one Claude Desktop session (the `docker run 
 
 ## Tips for good results
 
--   **Always call `area_eic` first** to resolve a country name to its EIC code before querying data. Many countries have multiple bidding zones (e.g. Norway has NO1–NO5).
--   **Fetch generously, aggregate via SQL.** The 100-row cap only applies to `sql_query` output — the cached DuckDB table holds the full result. Fetch a month or year of data once, then aggregate down to weekly / daily values via `sql_query(...)`.
--   **For generation time-series**, omit `gen_type` to get all production types, or filter with codes like `B16` (Solar) or `B18` (Wind offshore).
+- **Always call `area_eic` first** to resolve a country name to its EIC code before querying data. Many countries have multiple bidding zones (e.g. Norway has NO1–NO5).
+- **Fetch generously, aggregate via SQL.** The 100-row cap only applies to `sql_query` output — the cached DuckDB table holds the full result. Fetch a month or year of data once, then aggregate down to weekly / daily values via `sql_query(...)`.
+- **For generation time-series**, omit `gen_type` to get all production types, or filter with codes like `B16` (Solar) or `B18` (Wind offshore).
 
 ## Data notes
 
--   **Timezone**: All dates are interpreted as CET (Central European Time; UTC+1 / UTC+2 in summer) regardless of your local timezone.
--   **Resolution**: Load and generation data is typically at 15-minute or 1-hour intervals
--   **Row cap**: Results are capped at 100 rows per call. A truncation notice is appended when data is cut. Use short date ranges (1–7 days) to avoid truncation
--   **Max range**: Most time-series tools accept up to 1 year per query
--   **EIC codes**: Use `area_eic` to resolve country or zone names to EIC codes before querying data
+- **Timezone**: All dates are interpreted as CET (Central European Time; UTC+1 / UTC+2 in summer) regardless of your local timezone.
+- **Resolution**: Load and generation data is typically at 15-minute or 1-hour intervals
+- **Row cap**: The 21 time-series tools store their **full result** in DuckDB — no row cap at the fetch stage. The cap applies to `sql_query` output (default 100 rows) to keep aggregated results compact; raise `max_rows` explicitly when you need raw rows for plotting (e.g. 800 for a month of hourly data). A truncation notice is appended when output is cut.
+- **Max range**: Most time-series tools accept up to 1 year per query
+- **EIC codes**: Use `area_eic` to resolve country or zone names to EIC codes before querying data
 
 ------------------------------------------------------------------------
 
@@ -385,10 +385,10 @@ Tool results from the 21 time-series tools are inserted into an in-process **Duc
 
 ## Requirements
 
--   R ≥ 4.2.0
--   [`entsoeapi`](https://github.com/krose/entsoeapi) (GitHub)
--   [`mcptools`](https://github.com/posit-dev/mcptools) (GitHub)
--   `ellmer`, `lubridate`, `jsonlite`, `duckdb`, `DBI`, `digest` (CRAN)
+- R ≥ 4.2.0
+- [`entsoeapi`](https://github.com/krose/entsoeapi) (GitHub)
+- [`mcptools`](https://github.com/posit-dev/mcptools) (GitHub)
+- `ellmer`, `lubridate`, `jsonlite`, `duckdb`, `DBI`, `digest` (CRAN)
 
 ------------------------------------------------------------------------
 
@@ -396,4 +396,4 @@ Tool results from the 21 time-series tools are inserted into an in-process **Duc
 
 MIT © Sándor Budai. See [LICENSE](LICENSE).
 
-The underlying data is provided by [ENTSO-E](https://www.entsoe.eu) under their [terms of use](https://transparency.entsoe.eu/content/static_content/Static%20content/terms%20and%20conditions/terms%20and%20conditions.html).
+The underlying data is provided by [ENTSO-E](https://www.entsoe.eu) under their [terms of use](https://transparencyplatform.zendesk.com/hc/en-us/articles/40921911218961-Legal-Terms-and-Conditions).

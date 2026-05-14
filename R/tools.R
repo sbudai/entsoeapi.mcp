@@ -2,10 +2,18 @@
 # EIC Lookup Tools (no date params)
 # ============================================================
 
-# Helper: keep only identification-relevant columns and filter rows by
-# a query string.
-# Drops rarely-needed metadata (postal_code, vat_code, parent,
-# responsible_party, status) to reduce context window usage.
+#' Helper: keep only identification-relevant columns and filter rows by
+#' a query string.
+#' Drops rarely-needed metadata (postal_code, vat_code, parent,
+#' responsible_party, status) to reduce context window usage.
+#'
+#' @param df A data frame returned by an EIC lookup function.
+#' @param query Optional filter string; matched case-insensitively against all
+#'   columns. Pass `NULL` or `""` to skip filtering.
+#'
+#' @return a filtered data.frame
+#'
+#' @noRd
 .eic_filter <- function(df, query) {
   key_cols <- c(
     "eic_code", "eic_display_name", "eic_long_name",
@@ -17,7 +25,9 @@
     mask <- apply(
       X = df,
       MARGIN = 1L,
-      FUN = \(row) grepl(pattern = query, x = row, ignore.case = TRUE) |> any()
+      FUN = \(row) {
+        grepl(pattern = query, x = row, ignore.case = TRUE) |> any()
+      }
     )
     df <- df[mask, , drop = FALSE]
   }
@@ -27,18 +37,28 @@
 
 #' @importFrom ellmer tool type_string type_integer type_boolean
 #' @importFrom entsoeapi area_eic party_eic all_approved_eic resource_object_eic
-#'   get_news load_actual_total load_day_ahead_total_forecast congestion_income
-#'   load_week_ahead_total_forecast load_month_ahead_total_forecast
-#'   load_year_ahead_total_forecast load_year_ahead_forecast_margin
-#'   gen_per_prod_type gen_wind_solar_forecasts gen_day_ahead_forecast
-#'   gen_per_gen_unit gen_storage_mean_filling_rate net_transfer_capacities
-#'   gen_installed_capacity_per_pt gen_installed_capacity_per_pu energy_prices
-#'   intraday_prices day_ahead_commercial_sched
-#'   explicit_offered_transfer_capacities flow_based_allocations
-#'   allocated_transfer_capacities_3rd_countries cross_border_physical_flows
-#'   total_commercial_sched net_positions forecasted_transfer_capacities
-#'   outages_gen_units outages_prod_units outages_transmission_grid
-#'   imbalance_prices imbalance_volumes contracted_reserves
+#' @importFrom entsoeapi get_news load_actual_total
+#' @importFrom entsoeapi load_day_ahead_total_forecast
+#' @importFrom entsoeapi load_week_ahead_total_forecast
+#' @importFrom entsoeapi load_month_ahead_total_forecast
+#' @importFrom entsoeapi load_year_ahead_total_forecast
+#' @importFrom entsoeapi load_year_ahead_forecast_margin
+#' @importFrom entsoeapi gen_per_prod_type gen_wind_solar_forecasts
+#' @importFrom entsoeapi gen_day_ahead_forecast gen_per_gen_unit
+#' @importFrom entsoeapi gen_storage_mean_filling_rate
+#' @importFrom entsoeapi gen_installed_capacity_per_pt
+#' @importFrom entsoeapi gen_installed_capacity_per_pu
+#' @importFrom entsoeapi energy_prices intraday_prices
+#' @importFrom entsoeapi net_transfer_capacities congestion_income
+#' @importFrom entsoeapi day_ahead_commercial_sched
+#' @importFrom entsoeapi explicit_offered_transfer_capacities
+#' @importFrom entsoeapi flow_based_allocations
+#' @importFrom entsoeapi allocated_transfer_capacities_3rd_countries
+#' @importFrom entsoeapi cross_border_physical_flows total_commercial_sched
+#' @importFrom entsoeapi net_positions forecasted_transfer_capacities
+#' @importFrom entsoeapi outages_gen_units outages_prod_units
+#' @importFrom entsoeapi outages_transmission_grid
+#' @importFrom entsoeapi imbalance_prices imbalance_volumes contracted_reserves
 tool_area_eic <- tool(
   name = "area_eic",
   fun = \(query = NULL) {
@@ -197,7 +217,7 @@ tool_load <- tool(
       )
     ) |>
       safe_to_cache(
-        prefix    = paste0("load_", type),
+        prefix = paste0("load_", type),
         args_list = list(
           eic = eic, period_start = period_start,
           period_end = period_end, type = type
@@ -262,7 +282,7 @@ tool_gen_time_series <- tool(
       )
     ) |>
       safe_to_cache(
-        prefix    = paste0("gen_", type),
+        prefix = paste0("gen_", type),
         args_list = list(
           eic = eic, period_start = period_start,
           period_end = period_end, type = type, gen_type = gen_type
@@ -365,7 +385,7 @@ tool_energy_prices <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "energy_prices",
+        prefix = "energy_prices",
         args_list = list(
           eic = eic, period_start = period_start,
           period_end = period_end, contract_type = contract_type
@@ -416,7 +436,7 @@ tool_intraday_prices <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "intraday_prices",
+        prefix = "intraday_prices",
         args_list = list(
           eic = eic, period_start = period_start, period_end = period_end
         )
@@ -460,7 +480,7 @@ tool_net_transfer_capacities <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "ntc",
+        prefix = "ntc",
         args_list = list(
           eic_in = eic_in, eic_out = eic_out,
           period_start = period_start, period_end = period_end,
@@ -502,7 +522,7 @@ tool_net_transfer_capacities <- tool(
 )
 
 
-tool_day_ahead_commercial_sched <- tool( # nolint: object_length_linter
+tool_day_ahead_commercial_sched <- tool(  # nolint: object_length_linter
   name = "day_ahead_commercial_sched",
   fun = \(eic_in, eic_out, period_start, period_end) {
     day_ahead_commercial_sched(
@@ -513,7 +533,7 @@ tool_day_ahead_commercial_sched <- tool( # nolint: object_length_linter
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "da_commercial_sched",
+        prefix = "da_commercial_sched",
         args_list = list(
           eic_in = eic_in, eic_out = eic_out,
           period_start = period_start, period_end = period_end
@@ -558,7 +578,7 @@ tool_explicit_offered_transfer_capacities <- tool( # nolint: object_length_linte
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "explicit_offered_tc",
+        prefix = "explicit_offered_tc",
         args_list = list(
           eic_in = eic_in, eic_out = eic_out,
           period_start = period_start, period_end = period_end,
@@ -607,7 +627,7 @@ tool_flow_based_allocations <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "flow_based",
+        prefix = "flow_based",
         args_list = list(
           eic = eic, period_start = period_start,
           period_end = period_end, process_type = process_type
@@ -652,7 +672,7 @@ tool_congestion_income <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "congestion_income",
+        prefix = "congestion_income",
         args_list = list(
           eic = eic, period_start = period_start,
           period_end = period_end, contract_type = contract_type
@@ -684,7 +704,7 @@ tool_congestion_income <- tool(
 )
 
 
-tool_allocated_transfer_capacities_3rd_countries <- tool( # nolint: object_length_linter
+tool_allocated_transfer_capacities_3rd_countries <- tool(  # nolint: object_length_linter
   name = "allocated_transfer_capacities_3rd_countries",
   fun = \(eic_in, eic_out, period_start, period_end, contract_type = "A01",
           auction_category = "A04") {
@@ -698,7 +718,7 @@ tool_allocated_transfer_capacities_3rd_countries <- tool( # nolint: object_lengt
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "allocated_tc_3rd",
+        prefix = "allocated_tc_3rd",
         args_list = list(
           eic_in = eic_in, eic_out = eic_out,
           period_start = period_start, period_end = period_end,
@@ -759,7 +779,7 @@ tool_cross_border_physical_flows <- tool( # nolint: object_length_linter
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "cross_border_flows",
+        prefix = "cross_border_flows",
         args_list = list(
           eic_in = eic_in, eic_out = eic_out,
           period_start = period_start, period_end = period_end
@@ -803,7 +823,7 @@ tool_total_commercial_sched <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "total_commercial_sched",
+        prefix = "total_commercial_sched",
         args_list = list(
           eic_in = eic_in, eic_out = eic_out,
           period_start = period_start, period_end = period_end
@@ -847,7 +867,7 @@ tool_net_positions <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "net_positions",
+        prefix = "net_positions",
         args_list = list(
           eic = eic, period_start = period_start,
           period_end = period_end, contract_type = contract_type
@@ -892,7 +912,7 @@ tool_forecasted_transfer_capacities <- tool( # nolint: object_length_linter
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "forecasted_tc",
+        prefix = "forecasted_tc",
         args_list = list(
           eic_in = eic_in, eic_out = eic_out,
           period_start = period_start, period_end = period_end,
@@ -951,7 +971,7 @@ tool_outages_gen_units <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "outages_gen",
+        prefix = "outages_gen",
         args_list = list(
           eic = eic, period_start = period_start,
           period_end = period_end,
@@ -1010,7 +1030,7 @@ tool_outages_prod_units <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "outages_prod",
+        prefix = "outages_prod",
         args_list = list(
           eic = eic, period_start = period_start,
           period_end = period_end,
@@ -1069,7 +1089,7 @@ tool_outages_transmission_grid <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "outages_grid",
+        prefix = "outages_grid",
         args_list = list(
           eic_in = eic_in, eic_out = eic_out,
           period_start = period_start, period_end = period_end,
@@ -1132,7 +1152,7 @@ tool_imbalance_prices <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "imbalance_prices",
+        prefix = "imbalance_prices",
         args_list = list(
           eic = eic, period_start = period_start, period_end = period_end
         )
@@ -1167,7 +1187,7 @@ tool_imbalance_volumes <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "imbalance_volumes",
+        prefix = "imbalance_volumes",
         args_list = list(
           eic = eic, period_start = period_start, period_end = period_end
         )
@@ -1205,7 +1225,7 @@ tool_contracted_reserves <- tool(
       tidy_output = TRUE
     ) |>
       safe_to_cache(
-        prefix    = "contracted_reserves",
+        prefix = "contracted_reserves",
         args_list = list(
           eic = eic,
           market_agreement_type = market_agreement_type,
@@ -1265,9 +1285,11 @@ tool_sql_query <- tool(
     "those tables instead of re-fetching from the ENTSO-E API. Full SELECT",
     "/ WITH / CREATE TEMP / INSERT etc. are supported. Results are returned as",
     "CSV and capped at max_rows (default 100) - aggregate with GROUP BY to",
-    "stay under the cap. Use list_tables() or describe_table() to discover",
-    "availabletables. DuckDB errors are returned as '# error: <message>' so",
-    "you can read them and retry."
+    "stay under the cap. For plotting raw points, pass max_rows explicitly",
+    "(e.g. 800 for one month of hourly data, 3000 for 15-min data); avoid",
+    "values above 5000 and prefer GROUP BY aggregation. Use list_tables() or",
+    "describe_table() to discover available tables. DuckDB errors are",
+    "returned as '# error: <message>' so you can read them and retry."
   ),
   arguments = list(
     sql = type_string(
@@ -1277,7 +1299,11 @@ tool_sql_query <- tool(
       )
     ),
     max_rows = type_integer(
-      description = "Row cap on the returned CSV (default 100).",
+      description = paste(
+        "Row cap on the returned CSV. Default 100 to encourage GROUP BY",
+        "aggregation. Raise (up to ~5000) only when the LLM needs raw rows",
+        "for plotting."
+      ),
       required = FALSE
     )
   )

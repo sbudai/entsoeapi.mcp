@@ -51,14 +51,21 @@ run <- function(session_tools = FALSE) {
 mute_stdout_tool <- function(tool_def) {
   # capture the original ToolDef as a plain fn ref
   fn <- tool_def
-  old_class <- class(tool_def)
+  old_class <- class(x = tool_def)
 
   # S7 slots: class, S7_class, name, description, ...
-  old_attrs <- attributes(tool_def)
+  old_attrs <- attributes(x = tool_def)
 
   wrapper <- \(...) {
     .result <- NULL
-    capture.output(.result <- fn(...), type = "output")
+    .err <- tryCatch(
+      expr = {
+        capture.output(.result <- fn(...), type = "output")
+        NULL
+      },
+      error = identity
+    )
+    if (!is.null(.err)) return(paste0("# error: ", conditionMessage(.err)))
     .result
   }
 
@@ -72,7 +79,7 @@ mute_stdout_tool <- function(tool_def) {
   for (nm in setdiff(x = names(old_attrs), y = src_attrs)) {
     attr(x = wrapper, which = nm) <- old_attrs[[nm]]
   }
-  class(wrapper) <- old_class
+  class(x = wrapper) <- old_class
   wrapper
 }
 
@@ -91,15 +98,17 @@ all_tools <- function() {
     tool_resource_object_eic,
     tool_get_news,
 
-    # Load (merged: actual, day_ahead, week_ahead, month_ahead, year_ahead,
-    #               margin)
+    # Load (merged: actual, day_ahead,  # nolint: commented_code_linter
+    #               week_ahead, month_ahead,  # nolint: commented_code_linter
+    #                year_ahead, margin)  # nolint: commented_code_linter
     tool_load,
 
-    # Generation (merged: time-series & capacity)  # nolint: commented_code_linter
+    # Generation (merged: time-series &  # nolint: commented_code_linter
+    #                     capacity)  # nolint: commented_code_linter
     tool_gen_time_series,
     tool_gen_capacity,
 
-    # Market
+    # Market  # nolint: commented_code_linter
     tool_energy_prices,
     tool_intraday_prices,
     tool_net_transfer_capacities,
@@ -109,23 +118,23 @@ all_tools <- function() {
     tool_congestion_income,
     tool_allocated_transfer_capacities_3rd_countries,
 
-    # Transmission
+    # Transmission  # nolint: commented_code_linter
     tool_cross_border_physical_flows,
     tool_total_commercial_sched,
     tool_net_positions,
     tool_forecasted_transfer_capacities,
 
-    # Outages
+    # Outages  # nolint: commented_code_linter
     tool_outages_gen_units,
     tool_outages_prod_units,
     tool_outages_transmission_grid,
 
-    # Balancing
+    # Balancing  # nolint: commented_code_linter
     tool_imbalance_prices,
     tool_imbalance_volumes,
     tool_contracted_reserves,
 
-    # Session DuckDB cache
+    # Session DuckDB cache  # nolint: commented_code_linter
     tool_sql_query,
     tool_list_tables,
     tool_describe_table

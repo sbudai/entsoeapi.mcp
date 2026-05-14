@@ -44,11 +44,11 @@ without flooding its context window.
 
 ## Prerequisites
 
-| Requirement                                                                    | Purpose                             | Notes                                   |
-|--------------------------------------------------------------------------------|-------------------------------------|-----------------------------------------|
-| [Docker](https://docs.docker.com/get-docker/)                                  | Runs the server container           | Any version that supports `docker run`. |
-| [Claude Desktop](https://claude.ai/download)                                   | MCP client                          | or any MCP-compatible client            |
-| [ENTSO-E API token](https://transparency.entsoe.eu/usrm/user/createPublicUser) | Access to the Transparency Platform | Free registration; UUID v4 format.      |
+| Requirement | Purpose | Notes |
+|----|----|----|
+| [Docker](https://docs.docker.com/get-docker/) | Runs the server container | Any version that supports `docker run`. |
+| [Claude Desktop](https://claude.com/download) | MCP client | or any MCP-compatible client |
+| [ENTSO-E API token](https://transparency.entsoe.eu/usrm/user/createPublicUser) | Access to the Transparency Platform | Free registration; UUID v4 format. |
 
 ------------------------------------------------------------------------
 
@@ -127,13 +127,13 @@ format**.
 
 ### EIC lookup
 
-| Tool                  | Description                                                                     |
-|-----------------------|---------------------------------------------------------------------------------|
-| `area_eic`            | Bidding zones, control areas, member states — look up EIC codes by country name |
-| `party_eic`           | Market participants (TSOs, traders, etc.)                                       |
-| `all_approved_eic`    | All approved EIC codes across all types                                         |
-| `resource_object_eic` | Generation units and other resource objects                                     |
-| `get_news`            | Latest news and maintenance notices from ENTSO-E                                |
+| Tool | Description |
+|----|----|
+| `area_eic` | Bidding zones, control areas, member states — look up EIC codes by country name |
+| `party_eic` | Market participants (TSOs, traders, etc.) |
+| `all_approved_eic` | All approved EIC codes across all types |
+| `resource_object_eic` | Generation units and other resource objects |
+| `get_news` | Latest news and maintenance notices from ENTSO-E |
 
 ### Load
 
@@ -152,13 +152,13 @@ One tool with a `type` parameter:
 
 One tool (`gen_time_series`) with a `type` parameter:
 
-| `type` value         | ENTSO-E dataset | Description                                    |
-|----------------------|-----------------|------------------------------------------------|
-| `actual` *(default)* | 16.1.B&C        | Actual generation per production type          |
-| `wind_solar`         | 14.1.D          | Day-ahead wind and solar forecast              |
-| `day_ahead`          | 14.1.C          | Day-ahead aggregated generation forecast       |
-| `per_unit`           | 16.1.A          | Actual generation per generation unit *(slow)* |
-| `storage`            | 16.1.D          | Hydro reservoir / water storage filling rate   |
+| `type` value | ENTSO-E dataset | Description |
+|----|----|----|
+| `actual` *(default)* | 16.1.B&C | Actual generation per production type |
+| `wind_solar` | 14.1.D | Day-ahead wind and solar forecast |
+| `day_ahead` | 14.1.C | Day-ahead aggregated generation forecast |
+| `per_unit` | 16.1.A | Actual generation per generation unit *(slow)* |
+| `storage` | 16.1.D | Hydro reservoir / water storage filling rate |
 
 ### Generation — installed capacity
 
@@ -171,33 +171,33 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 
 ### Market
 
-| Tool                                          | ENTSO-E dataset | Description                                            |
-|-----------------------------------------------|-----------------|--------------------------------------------------------|
-| `energy_prices`                               | 12.1.D          | Day-ahead / intraday market clearing prices            |
-| `intraday_prices`                             | 12.1.D          | Intraday market prices                                 |
-| `net_transfer_capacities`                     | 11.1            | NTC between two bidding zones                          |
-| `day_ahead_commercial_sched`                  | 12.1.F          | Day-ahead commercial schedules                         |
-| `explicit_offered_transfer_capacities`        | 12.1.A          | Explicit offered transfer capacities                   |
-| `flow_based_allocations`                      | 12.1.B          | Flow-based allocations for CWE/Core region             |
-| `congestion_income`                           | 12.1.G          | Congestion income                                      |
-| `allocated_transfer_capacities_3rd_countries` | 12.1.C          | Allocated transfer capacities on third-country borders |
+| Tool | ENTSO-E dataset | Description |
+|----|----|----|
+| `energy_prices` | 12.1.D | Day-ahead / intraday market clearing prices |
+| `intraday_prices` | 12.1.D | intraday market prices |
+| `net_transfer_capacities` | 11.1 | NTC between two bidding zones |
+| `day_ahead_commercial_sched` | 12.1.F | Day-ahead commercial schedules |
+| `explicit_offered_transfer_capacities` | 12.1.A | Explicit offered transfer capacities |
+| `flow_based_allocations` | 12.1.B | Flow-based allocations for CWE/Core region |
+| `congestion_income` | 12.1.G | Congestion income |
+| `allocated_transfer_capacities_3rd_countries` | 12.1.C | Allocated transfer capacities on third-country borders |
 
 ### Transmission
 
-| Tool                             | ENTSO-E dataset | Description                    |
-|----------------------------------|-----------------|--------------------------------|
-| `cross_border_physical_flows`    | 12.1.G          | Physical cross-border flows    |
-| `total_commercial_sched`         | 12.1.F          | Total commercial schedules     |
-| `net_positions`                  | 12.1.H          | Net positions                  |
-| `forecasted_transfer_capacities` | 11.1            | Forecasted transfer capacities |
+| Tool | ENTSO-E dataset | Description |
+|----|----|----|
+| `cross_border_physical_flows` | 12.1.G | Physical cross-border flows |
+| `total_commercial_sched` | 12.1.F | Total commercial schedules |
+| `net_positions` | 12.1.H | Net positions |
+| `forecasted_transfer_capacities` | 11.1 | Forecasted transfer capacities |
 
 ### Outages
 
-| Tool                        | ENTSO-E dataset | Description                             |
-|-----------------------------|-----------------|-----------------------------------------|
-| `outages_gen_units`         | 15.1.A&B        | Unavailability of generation units      |
-| `outages_prod_units`        | 15.1.C&D        | Unavailability of production units      |
-| `outages_transmission_grid` | 15.1.A&B        | Unavailability in the transmission grid |
+| Tool | ENTSO-E dataset | Description |
+|----|----|----|
+| `outages_gen_units` | 15.1.A&B | Unavailability of generation units |
+| `outages_prod_units` | 15.1.C&D | Unavailability of production units |
+| `outages_transmission_grid` | 15.1.A&B | Unavailability in the transmission grid |
 
 ### Balancing
 
@@ -209,26 +209,41 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 
 ### Session DuckDB cache
 
-| Tool             | Description                                                                                              |
-|------------------|----------------------------------------------------------------------------------------------------------|
-| `sql_query`      | Run a SQL query (DuckDB dialect) against cached tables. Returns CSV, capped at `max_rows` (default 100). |
-| `list_tables`    | List every cached table in this session with row counts and column schemas.                              |
-| `describe_table` | Schema + row count + N sample rows for one named table.                                                  |
+| Tool | Description |
+|----|----|
+| `sql_query` | Run a SQL query (DuckDB dialect) against cached tables. Returns CSV, capped at `max_rows` (default 100). Raise the cap for plotting (e.g. 800 for monthly hourly data); avoid values above 5000. |
+| `list_tables` | List every cached table in this session with row counts and column schemas. |
+| `describe_table` | Schema + row count + N sample rows for one named table. |
 
 Every time-series tool inserts its full result into an in-memory DuckDB
-table and returns an envelope:
+table and returns an envelope. The envelope tells Claude — in every call
+— that statistics must be computed via `sql_query`, never from the
+schema sample, and warns when multiple `TimeSeries` (e.g. day-ahead
+Sequence 1 vs. Sequence 2) are stacked together in one cached table:
 
-    # table: load_actual_a3f7d2
-    # rows: 8760
-    # columns: dt_start TIMESTAMP, value DOUBLE, area_name VARCHAR
-    # preview (first 5 rows):
-    dt_start,value,area_name
-    2024-01-01 00:00:00,42500,Germany
-    2024-01-01 01:00:00,42200,Germany
-    2024-01-01 02:00:00,41800,Germany
-    2024-01-01 03:00:00,41500,Germany
-    2024-01-01 04:00:00,41700,Germany
-    # hint: SELECT date_trunc('week', dt_start) AS wk, AVG(value) FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1
+    # table: energy_prices_a3f7d2
+    # rows: 336
+    # columns: dt_start TIMESTAMP, price DOUBLE, sequence INTEGER
+    # ────────────────────────────────────────────────────────────
+    # IMPORTANT — read before using this result:
+    #   This is a CACHED TABLE, not a result set. The rows below
+    #   are a SCHEMA SAMPLE only — they are NOT representative of
+    #   the data, may omit other series, and MUST NOT be used for
+    #   any analysis. NEVER compute averages, totals, min/max,
+    #   counts, or any statistic from this sample.
+    #   ALWAYS call sql_query(...) against the table named above
+    #   for ANY aggregation, filter, statistic, or join.
+    # ────────────────────────────────────────────────────────────
+    # WARNING: multiple series present in this table:
+    #   sequence: 1, 2     (filter explicitly; do not assume one)
+    # schema sample (5 of 336 rows; do not use for analysis):
+    dt_start,price,sequence
+    2024-01-01 00:00:00,42.5,1
+    2024-01-01 01:00:00,41.2,1
+    2024-01-01 02:00:00,40.8,1
+    2024-01-01 03:00:00,40.1,1
+    2024-01-01 04:00:00,39.7,1
+    # suggested query: SELECT date_trunc('week', dt_start) AS wk, AVG(price) FROM energy_prices_a3f7d2 GROUP BY 1 ORDER BY 1
 
 The cache lives for the lifetime of one Claude Desktop session (the
 `docker run --rm -i` container). Identical queries within a session
@@ -264,9 +279,12 @@ for January 2024”*:
   UTC+1 / UTC+2 in summer) regardless of your local timezone.
 - **Resolution**: Load and generation data is typically at 15-minute or
   1-hour intervals
-- **Row cap**: Results are capped at 100 rows per call. A truncation
-  notice is appended when data is cut. Use short date ranges (1–7 days)
-  to avoid truncation
+- **Row cap**: The 21 time-series tools store their **full result** in
+  DuckDB — no row cap at the fetch stage. The cap applies to `sql_query`
+  output (default 100 rows) to keep aggregated results compact; raise
+  `max_rows` explicitly when you need raw rows for plotting (e.g. 800
+  for a month of hourly data). A truncation notice is appended when
+  output is cut.
 - **Max range**: Most time-series tools accept up to 1 year per query
 - **EIC codes**: Use `area_eic` to resolve country or zone names to EIC
   codes before querying data
@@ -326,7 +344,7 @@ binaries, and runs as a non-root `mcp` user.
 
 ## Testing
 
-The package ships with **90 unit tests** that exercise every tool
+The package ships with **94 unit tests** that exercise every tool
 wrapper, every dispatch branch, and every utility — yielding **99% line
 coverage** across `R/run.R`, `R/tools.R`, and `R/utils.R`.
 
@@ -372,7 +390,7 @@ the Transparency Platform.
     |       ├── test-run.R    # Unit tests of run.R (8 tests)
     |       ├── test-tools.R  # Unit tests of tools.R (47 tests)
     |       ├── test-utils.R  # Unit tests of utils.R (14 tests)
-    |       └── test-db.R     # Unit tests of db.R (21 tests)
+    |       └── test-db.R     # Unit tests of db.R (25 tests)
     ├── man
     |   └── run.Rd            # Documentation of functions in R/run.R
     └── .github/
@@ -410,4 +428,4 @@ MIT © Sándor Budai. See [LICENSE](LICENSE).
 
 The underlying data is provided by [ENTSO-E](https://www.entsoe.eu)
 under their [terms of
-use](https://transparency.entsoe.eu/content/static_content/Static%20content/terms%20and%20conditions/terms%20and%20conditions.html).
+use](https://transparencyplatform.zendesk.com/hc/en-us/articles/40921911218961-Legal-Terms-and-Conditions).
