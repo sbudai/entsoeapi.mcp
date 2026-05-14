@@ -6,3 +6,6 @@ Dockerfile
 build.log
 ^\.positai$
 ^\.claude$
+^README.Rmd
+^RELEASE_CHECKLIST.md
+^LICENSE.md
