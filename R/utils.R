@@ -12,7 +12,7 @@
 #' @noRd
 parse_date <- function(ts, tz = "CET") {
   if (inherits(x = ts, what = "POSIXct")) return(ts)
-  ymd(ts, tz = tz)
+  ymd(ts, tz = tz)  # nolint: object_usage_linter
 }
 
 
@@ -80,7 +80,7 @@ safe_to_cache <- function(df, prefix, args_list) {
   if (is.null(df) || (is.data.frame(df) && nrow(df) == 0L)) return("(no data)")
   if (!is.data.frame(df)) return(safe_to_csv(df))
   df <- slim_ts(df = df)
-  db_store(df = df, prefix = prefix, args_list = args_list)
+  db_store(df = df, prefix = prefix, args_list = args_list)  # nolint: object_usage_linter
 }
 
 
@@ -119,5 +119,5 @@ safe_to_csv <- function(df, max_rows = 100L) {
     return(out)
   }
   # Fallback for non-data-frame results (e.g. nested lists)
-  toJSON(x = df, auto_unbox = TRUE, date_format = "ISO8601", na = "null")
+  toJSON(x = df, auto_unbox = TRUE, date_format = "ISO8601", na = "null")  # nolint: object_usage_linter
 }

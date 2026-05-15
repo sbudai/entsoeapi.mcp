@@ -17,7 +17,7 @@
 #'
 #' @export
 run <- function(session_tools = FALSE) {
-  mcp_server(
+  mcp_server(  # nolint: object_usage_linter
     tools = lapply(X = all_tools(), FUN = mute_stdout_tool),
     session_tools = session_tools
   ) |>
@@ -41,11 +41,11 @@ run <- function(session_tools = FALSE) {
 #'
 #' @param tool_def A `ToolDef` S7 object (as returned by `mcptools::tool()`).
 #'
-#' @importFrom utils capture.output
-#'
 #' @return A `ToolDef` object identical to `tool_def` except that its callable
 #'   body suppresses any stdout produced during execution (e.g. HTTP headers
 #'   printed by `httr2::req_verbose()`).
+#'
+#' @importFrom utils capture.output
 #'
 #' @noRd
 mute_stdout_tool <- function(tool_def) {
@@ -92,51 +92,51 @@ mute_stdout_tool <- function(tool_def) {
 all_tools <- function() {
   list(
     # EIC lookup
-    tool_area_eic,
-    tool_party_eic,
-    tool_all_approved_eic,
-    tool_resource_object_eic,
-    tool_get_news,
+    tool_area_eic,  # nolint: object_usage_linter
+    tool_party_eic,  # nolint: object_usage_linter
+    tool_all_approved_eic,  # nolint: object_usage_linter
+    tool_resource_object_eic,  # nolint: object_usage_linter
+    tool_get_news,  # nolint: object_usage_linter
 
     # Load (merged: actual, day_ahead,  # nolint: commented_code_linter
     #               week_ahead, month_ahead,  # nolint: commented_code_linter
-    #                year_ahead, margin)  # nolint: commented_code_linter
-    tool_load,
+    #               year_ahead, margin)  # nolint: commented_code_linter
+    tool_load,  # nolint: object_usage_linter
 
     # Generation (merged: time-series &  # nolint: commented_code_linter
     #                     capacity)  # nolint: commented_code_linter
-    tool_gen_time_series,
-    tool_gen_capacity,
+    tool_gen_time_series,  # nolint: object_usage_linter
+    tool_gen_capacity,  # nolint: object_usage_linter
 
     # Market  # nolint: commented_code_linter
-    tool_energy_prices,
-    tool_intraday_prices,
-    tool_net_transfer_capacities,
-    tool_day_ahead_commercial_sched,
-    tool_explicit_offered_transfer_capacities,
-    tool_flow_based_allocations,
-    tool_congestion_income,
-    tool_allocated_transfer_capacities_3rd_countries,
+    tool_energy_prices,  # nolint: object_usage_linter
+    tool_intraday_prices,  # nolint: object_usage_linter
+    tool_net_transfer_capacities,  # nolint: object_usage_linter
+    tool_day_ahead_commercial_sched,  # nolint: object_usage_linter
+    tool_explicit_offered_transfer_capacities,  # nolint: object_usage_linter
+    tool_flow_based_allocations,  # nolint: object_usage_linter
+    tool_congestion_income,  # nolint: object_usage_linter
+    tool_allocated_transfer_capacities_3rd_countries,  # nolint: object_usage_linter
 
     # Transmission  # nolint: commented_code_linter
-    tool_cross_border_physical_flows,
-    tool_total_commercial_sched,
-    tool_net_positions,
-    tool_forecasted_transfer_capacities,
+    tool_cross_border_physical_flows,  # nolint: object_usage_linter
+    tool_total_commercial_sched,  # nolint: object_usage_linter
+    tool_net_positions,  # nolint: object_usage_linter
+    tool_forecasted_transfer_capacities,  # nolint: object_usage_linter
 
     # Outages  # nolint: commented_code_linter
-    tool_outages_gen_units,
-    tool_outages_prod_units,
-    tool_outages_transmission_grid,
+    tool_outages_gen_units,  # nolint: object_usage_linter
+    tool_outages_prod_units,  # nolint: object_usage_linter
+    tool_outages_transmission_grid,  # nolint: object_usage_linter
 
     # Balancing  # nolint: commented_code_linter
-    tool_imbalance_prices,
-    tool_imbalance_volumes,
-    tool_contracted_reserves,
+    tool_imbalance_prices,  # nolint: object_usage_linter
+    tool_imbalance_volumes,  # nolint: object_usage_linter
+    tool_contracted_reserves,  # nolint: object_usage_linter
 
     # Session DuckDB cache  # nolint: commented_code_linter
-    tool_sql_query,
-    tool_list_tables,
-    tool_describe_table
+    tool_sql_query,  # nolint: object_usage_linter
+    tool_list_tables,  # nolint: object_usage_linter
+    tool_describe_table  # nolint: object_usage_linter
   )
 }

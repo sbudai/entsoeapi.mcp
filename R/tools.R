@@ -79,7 +79,9 @@ tool_area_eic <- tool(
     "downstream tool. Day-ahead and intraday PRICES are published per",
     "BIDDING ZONE (BZN); LOAD is published per CONTROL AREA (CTA);",
     "CROSS-BORDER flows and transfer capacities are published per BORDER.",
-    "Pick the EIC whose area_type_code matches the domain you need."
+    "Pick the EIC whose area_type_code matches the domain you need.",
+    "Trigger phrases: 'EIC code for Germany', 'what zone is Austria',",
+    "'find the bidding zone for France', 'look up EIC for HU'."
   ),
   arguments = list(
     query = type_string(
@@ -225,7 +227,12 @@ tool_load <- tool(
       )
   },
   description = paste(
-    "Get load data for a bidding zone. Prefer 1-3 day date ranges - 15-min",
+    "Get real electricity consumption / demand data for a European country or",
+    "bidding zone (e.g. Germany, Austria, Hungary, France). Use for any",
+    "request about total load, power demand, electricity consumption, MW load",
+    "profile, or actual/forecast demand.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic load values.",
+    "Prefer 1-3 day date ranges - 15-min",
     "data fills the 100-row cap in ~1 day; hourly data allows ~4 days.",
     "Max 1-year API limit. type: 'actual' (6.1.A, default), 'day_ahead'",
     "(6.1.B), 'week_ahead' (6.1.C), 'month_ahead' (6.1.D), 'year_ahead'",
@@ -290,7 +297,13 @@ tool_gen_time_series <- tool(
       )
   },
   description = paste(
-    "Get generation time-series for a bidding zone. Prefer 1-3 day date ranges",
+    "Get real electricity generation data by fuel type or technology for a",
+    "European bidding zone. Use for any request about actual generation,",
+    "power output by fuel type, fuel mix, renewable generation, solar output,",
+    "wind power output, generation breakdown, or electricity production by",
+    "technology (solar, wind, nuclear, hydro, gas, coal, biomass, etc.).",
+    "Returns actual ENTSO-E data - do NOT generate synthetic generation",
+    "values. Prefer 1-3 day date ranges",
     "- 15-min data fills the 100-row cap in ~1 day; hourly data allows ~4",
     "days. Max 1-year API limit. type: 'actual' (16.1.B&C per production type,",
     "default), 'wind_solar' (14.1.D forecast), 'day_ahead' (14.1.C aggregate",
@@ -348,7 +361,11 @@ tool_gen_capacity <- tool(
       )
   },
   description = paste(
-    "Get installed generation capacity for a bidding zone and year.",
+    "Get real installed generation capacity (MW) for a European bidding zone.",
+    "Use for any request about installed capacity, nameplate capacity,",
+    "generation fleet, renewable capacity, nuclear capacity, or power plant",
+    "capacity by technology type.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic capacity values.",
     "per_unit=FALSE (default): aggregate by production type (14.1.A).",
     "per_unit=TRUE: individual production unit level (14.1.C, more granular)."
   ),
@@ -393,9 +410,16 @@ tool_energy_prices <- tool(
       )
   },
   description = paste(
-    "Get day-ahead or intraday market clearing prices (12.1.D) for a bidding",
-    "zone. Prefer 1-3 day date ranges (results capped at 100 rows). Max 1-year",
-    "API limit. contract_type: 'A01' = Day ahead (default), 'A07' = Intraday.",
+    "Get real electricity market prices for European bidding zones such as",
+    "Germany (DE-LU), Austria (AT), Hungary (HU), France (FR), Italy (IT),",
+    "Czech Republic (CZ), Romania (RO), etc. Use for any request about power",
+    "prices, spot prices, day-ahead prices, SDAC prices, EPEX prices,",
+    "EUR/MWh electricity prices, or ENTSO-E market price data.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic prices when this",
+    "tool is available.",
+    "Technical: day-ahead or intraday market clearing prices (12.1.D). Max",
+    "1-year API limit.",
+    "contract_type: 'A01' = Day ahead (default), 'A07' = Intraday.",
     "Use area_eic() to find the EIC code.",
     "NOTE: ENTSO-E publishes multiple TimeSeries (sequences) per auction",
     "document - typically Sequence 1 = the BINDING auction price, Sequence 2",
@@ -443,9 +467,12 @@ tool_intraday_prices <- tool(
       )
   },
   description = paste(
-    "Get intraday market prices for a bidding zone. Specialised wrapper around",
-    "the intraday contract type. Prefer 1-3 day date ranges (results capped at",
-    "100 rows). Max 1-year API limit.",
+    "Get real continuous intraday electricity prices (XBID, ID prices) for a",
+    "European bidding zone. Use for any request about intraday market prices,",
+    "continuous trading prices, or ID auction results.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic prices.",
+    "Specialised wrapper around the intraday contract type. Prefer 1-3 day",
+    "date ranges (results capped at 100 rows). Max 1-year API limit.",
     "NOTE: ENTSO-E publishes multiple TimeSeries (sequences) per auction",
     "document - typically Sequence 1 = the BINDING auction price, Sequence 2",
     "= secondary / shadow series. If the envelope WARNING reports multiple",
@@ -489,7 +516,11 @@ tool_net_transfer_capacities <- tool(
       )
   },
   description = paste(
-    "Get Net Transfer Capacities (NTC) between two bidding zones (11.1).",
+    "Get real Net Transfer Capacities (NTC) between two European bidding",
+    "zones. Use for any request about interconnection capacity, cross-border",
+    "transfer capacity, or import/export capacity between countries.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic capacity values.",
+    "Technical: NTC between two bidding zones (11.1).",
     "Prefer 1-3 day date ranges (results capped at 100 rows). contract_type:",
     "'A02' = Day ahead (default), 'A03' = Intraday, 'A04' = Week ahead.",
     "Use area_eic() to find EIC codes for both zones."
@@ -541,7 +572,11 @@ tool_day_ahead_commercial_sched <- tool(  # nolint: object_length_linter
       )
   },
   description = paste(
-    "Get day-ahead commercial schedules (12.1.F) between two bidding zones.",
+    "Get real day-ahead commercial schedules (nominations) between two",
+    "European bidding zones. Use for requests about DACF schedules,",
+    "commercial nominations, or scheduled cross-border exchanges.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic schedule values.",
+    "Technical: day-ahead commercial schedules (12.1.F).",
     "Prefer 1-3 day date ranges (results capped at 100 rows). Max 1-year API",
     "limit. Use area_eic() to find EIC codes."
   ),
@@ -587,8 +622,13 @@ tool_explicit_offered_transfer_capacities <- tool( # nolint: object_length_linte
       )
   },
   description = paste(
-    "Get explicit offered transfer capacities (12.1.A) between two bidding",
-    "zones. Prefer 1-3 day date ranges (results capped at 100 rows).",
+    "Get real explicit offered transfer capacities from long-term capacity",
+    "auctions (annual, monthly) between two European bidding zones. Use for",
+    "requests about explicit capacity auctions, long-term transmission rights,",
+    "or offered ATC from auctions.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic capacity values.",
+    "Technical: explicit offered transfer capacities (12.1.A).",
+    "Prefer 1-3 day date ranges (results capped at 100 rows).",
     "contract_type: 'A01' = Day ahead (default)."
   ),
   arguments = list(
@@ -635,9 +675,13 @@ tool_flow_based_allocations <- tool(
       )
   },
   description = paste(
-    "Get flow-based allocations (12.1.B) for the CWE/Core region. Prefer 1-3",
-    "day date ranges (results capped at 100 rows). process_type: 'A43' = Day",
-    "ahead (default), 'A32' = Intraday."
+    "Get real flow-based market coupling (FBMC) allocation results for the",
+    "CWE or Core region. Use for requests about flow-based allocations, FB MC",
+    "results, Core region capacity, or CWE flow-based data.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic allocation",
+    "values. Technical: flow-based allocations (12.1.B) for the CWE/Core",
+    "region. Prefer 1-3 day date ranges (results capped at 100 rows).",
+    "process_type: 'A43' = Day ahead (default), 'A32' = Intraday."
   ),
   arguments = list(
     eic = type_string(
@@ -680,9 +724,12 @@ tool_congestion_income <- tool(
       )
   },
   description = paste(
-    "Get congestion income (12.1.G) for a bidding zone or border. Prefer 1-3",
-    "day date ranges (results capped at 100 rows). contract_type: 'A01' =",
-    "Day ahead (default)."
+    "Get real congestion income (congestion rent) for a bidding zone border.",
+    "Use for requests about congestion revenue, auctioning income, or",
+    "transmission congestion rent.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic values.",
+    "Technical: congestion income (12.1.G). Prefer 1-3 day date ranges",
+    "(results capped at 100 rows). contract_type: 'A01' = Day ahead (default)."
   ),
   arguments = list(
     eic = type_string(description = "EIC code of the bidding zone."),
@@ -727,8 +774,12 @@ tool_allocated_transfer_capacities_3rd_countries <- tool(  # nolint: object_leng
       )
   },
   description = paste(
-    "Get allocated transfer capacities for third-country borders (12.1.C).",
-    "Prefer 1-3 day date ranges (results capped at 100 rows).",
+    "Get real allocated transfer capacities on borders with third countries",
+    "(non-EU: Ukraine, Serbia, Norway, Switzerland, etc.). Use for requests",
+    "about third-country capacity auctions or non-EU interconnection capacity.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic capacity values.",
+    "Technical: allocated transfer capacities for third-country borders",
+    "(12.1.C). Prefer 1-3 day date ranges (results capped at 100 rows).",
     "auction_category: 'A01' Annual, 'A02' Monthly, 'A03' Weekly, 'A04'",
     "Daily (default)."
   ),
@@ -787,7 +838,12 @@ tool_cross_border_physical_flows <- tool( # nolint: object_length_linter
       )
   },
   description = paste(
-    "Get physical cross-border flows (12.1.G) between two bidding zones.",
+    "Get real physical electricity flows between two European bidding zones.",
+    "Use for any request about actual cross-border flows, measured",
+    "imports/exports, physical interconnection flows, or electricity transfer",
+    "between countries.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic flow values.",
+    "Technical: physical cross-border flows (12.1.G).",
     "Prefer 1-3 day date ranges (results capped at 100 rows). Max 1-year API",
     "limit. Use area_eic() to find EIC codes."
   ),
@@ -831,7 +887,11 @@ tool_total_commercial_sched <- tool(
       )
   },
   description = paste(
-    "Get total commercial schedules (12.1.F) between two bidding zones.",
+    "Get real total commercial schedules between two European bidding zones.",
+    "Use for requests about total scheduled exchanges, net commercial",
+    "nominations, or aggregated cross-border schedules.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic schedule values.",
+    "Technical: total commercial schedules (12.1.F).",
     "Prefer 1-3 day date ranges (results capped at 100 rows). Max 1-year",
     "API limit."
   ),
@@ -875,7 +935,11 @@ tool_net_positions <- tool(
       )
   },
   description = paste(
-    "Get net positions (12.1.H) for a bidding zone. Prefer 1-3 day date ranges",
+    "Get real net positions (net export/import balance) for a European bidding",
+    "zone. Use for requests about net export position, net import position,",
+    "bidding zone balance, or export surplus/import deficit.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic position values.",
+    "Technical: net positions (12.1.H). Prefer 1-3 day date ranges",
     "(results capped at 100 rows). Max 1-year API limit. contract_type:",
     "'A01' = Day ahead (default), 'A07' = Intraday."
   ),
@@ -921,7 +985,12 @@ tool_forecasted_transfer_capacities <- tool( # nolint: object_length_linter
       )
   },
   description = paste(
-    "Get forecasted transfer capacities (11.1) between two bidding zones.",
+    "Get real forecasted transfer capacities (ATC - Available Transfer",
+    "Capacity) between two European bidding zones. Use for requests about",
+    "ATC, forecasted interconnection capacity, or available cross-border",
+    "transmission capacity.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic capacity values.",
+    "Technical: forecasted transfer capacities (11.1).",
     "Prefer 1-3 day date ranges (results capped at 100 rows).",
     "market_agreement_type: 'A01' = Day ahead (default), 'A02' =",
     "Total capacity."
@@ -980,7 +1049,12 @@ tool_outages_gen_units <- tool(
       )
   },
   description = paste(
-    "Get unavailability of generation units (15.1.A&B) for a bidding zone.",
+    "Get real generation unit unavailability reports from the ENTSO-E",
+    "Transparency Platform. Use for requests about forced outages, planned",
+    "maintenance of generation units, nuclear outages, REMIT reports,",
+    "unavailability of power plants, or generation unit outage data.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic outage records.",
+    "Technical: unavailability of generation units (15.1.A&B).",
     "Prefer 1-3 day date ranges (results capped at 100 rows). Max 1-year API",
     "limit. doc_status: 'A05' active, 'A09' cancelled, 'A13' withdrawn",
     "(NULL = active+cancelled). event_nature: 'A53' planned, 'A54' unplanned",
@@ -1039,7 +1113,11 @@ tool_outages_prod_units <- tool(
       )
   },
   description = paste(
-    "Get unavailability of production units (15.1.C&D) for a bidding zone.",
+    "Get real production unit unavailability reports (REMIT notifications)",
+    "from the ENTSO-E Transparency Platform. Use for requests about forced",
+    "outages or planned maintenance of individual production units.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic outage records.",
+    "Technical: unavailability of production units (15.1.C&D).",
     "Prefer 1-3 day date ranges (results capped at 100 rows). Max 1-year API",
     "limit. doc_status: 'A05' active, 'A09' cancelled, 'A13' withdrawn.",
     "event_nature: 'A53' planned, 'A54' unplanned."
@@ -1098,10 +1176,14 @@ tool_outages_transmission_grid <- tool(
       )
   },
   description = paste(
-    "Get unavailability in the transmission grid (15.1.A&B) on a border.",
-    "Prefer 1-3 day date ranges (results capped at 100 rows). Max 1-year API",
-    "limit. Requires both eic_in and eic_out for the affected border.",
-    "doc_status: 'A05' active, 'A09' cancelled, 'A13' withdrawn.",
+    "Get real transmission grid unavailability reports on a specific border.",
+    "Use for requests about grid outages, line outages, transmission",
+    "maintenance, interconnection outages, or REMIT grid reports.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic outage records.",
+    "Technical: unavailability in the transmission grid (15.1.A&B) on a",
+    "border. Prefer 1-3 day date ranges (results capped at 100 rows). Max",
+    "1-year API limit. Requires both eic_in and eic_out for the affected",
+    "border. doc_status: 'A05' active, 'A09' cancelled, 'A13' withdrawn.",
     "event_nature: 'A53' planned, 'A54' unplanned."
   ),
   arguments = list(
@@ -1159,8 +1241,12 @@ tool_imbalance_prices <- tool(
       )
   },
   description = paste(
-    "Get imbalance prices (17.1.D) for a scheduling area. Prefer 1-3 day date",
-    "ranges (results capped at 100 rows). Max 1-year API limit. Use area_eic()",
+    "Get real imbalance settlement prices for a European scheduling area.",
+    "Use for requests about balancing prices, system price, imbalance",
+    "settlement price, BRP settlement price, or balancing energy cost.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic price values.",
+    "Technical: imbalance prices (17.1.D). Prefer 1-3 day date ranges",
+    "(results capped at 100 rows). Max 1-year API limit. Use area_eic()",
     "to find the EIC code."
   ),
   arguments = list(
@@ -1194,7 +1280,11 @@ tool_imbalance_volumes <- tool(
       )
   },
   description = paste(
-    "Get imbalance volumes (17.1.C) for a scheduling area. Prefer 1-3 day",
+    "Get real imbalance volumes for a European scheduling area. Use for",
+    "requests about system imbalance, total balancing volumes, TSO activation",
+    "volumes, or balancing energy volumes.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic volume values.",
+    "Technical: imbalance volumes (17.1.C). Prefer 1-3 day",
     "date ranges (results capped at 100 rows). Max 1-year API limit."
   ),
   arguments = list(
@@ -1235,10 +1325,16 @@ tool_contracted_reserves <- tool(
       )
   },
   description = paste(
-    "Get contracted balancing reserves (17.1.B) for a scheduling area. Prefer",
+    "Get real contracted balancing reserve volumes for a European scheduling",
+    "area. Use for requests about FCR (Frequency Containment Reserves),",
+    "aFRR (automatic Frequency Restoration Reserves), mFRR (manual FRR),",
+    "RR (Replacement Reserves), procured balancing capacity, or balancing",
+    "reserve procurement results.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic reserve values.",
+    "Technical: contracted balancing reserves (17.1.B). Prefer",
     "1-3 day date ranges (results capped at 100 rows). market_agreement_type",
     "(required): 'A01' Daily, 'A02' Weekly, 'A03' Monthly, 'A04' Yearly, 'A06'",
-    "Long-term, 'A13' Intraday. process_type (optional): 'A46' FCR, 'A47' ",
+    "Long-term, 'A13' Intraday. process_type (optional): 'A46' FCR, 'A47'",
     "mFRR, 'A51' aFRR, 'A52' RR."
   ),
   arguments = list(

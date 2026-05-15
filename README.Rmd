@@ -65,7 +65,7 @@ Large time-series results are cached in an in-process **DuckDB** inside the cont
 ## Prerequisites
 
 | Requirement | Purpose | Notes |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | [Docker](https://docs.docker.com/get-docker/) | Runs the server container | Any version that supports `docker run`. |
 | [Claude Desktop](https://claude.com/download) | MCP client | or any MCP-compatible client |
 | [ENTSO-E API token](https://transparency.entsoe.eu/usrm/user/createPublicUser) | Access to the Transparency Platform | Free registration; UUID v4 format. |
@@ -136,7 +136,7 @@ The 21 time-series tools return a compact envelope pointing at a cached DuckDB t
 ### EIC lookup
 
 | Tool | Description |
-|------------------------------------|------------------------------------|
+|----|----|
 | `area_eic` | Bidding zones, control areas, member states — look up EIC codes by country name |
 | `party_eic` | Market participants (TSOs, traders, etc.) |
 | `all_approved_eic` | All approved EIC codes across all types |
@@ -148,7 +148,7 @@ The 21 time-series tools return a compact envelope pointing at a cached DuckDB t
 One tool with a `type` parameter:
 
 | `type` value         | ENTSO-E dataset | Description                           |
-|--------------------|------------------|----------------------------------|
+|----------------------|-----------------|---------------------------------------|
 | `actual` *(default)* | 6.1.A           | Actual total load                     |
 | `day_ahead`          | 6.1.B           | Day-ahead total load forecast         |
 | `week_ahead`         | 6.1.C           | Week-ahead total load forecast        |
@@ -161,7 +161,7 @@ One tool with a `type` parameter:
 One tool (`gen_time_series`) with a `type` parameter:
 
 | `type` value | ENTSO-E dataset | Description |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | `actual` *(default)* | 16.1.B&C | Actual generation per production type |
 | `wind_solar` | 14.1.D | Day-ahead wind and solar forecast |
 | `day_ahead` | 14.1.C | Day-ahead aggregated generation forecast |
@@ -180,7 +180,7 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 ### Market
 
 | Tool | ENTSO-E dataset | Description |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | `energy_prices` | 12.1.D | Day-ahead / intraday market clearing prices |
 | `intraday_prices` | 12.1.D | intraday market prices |
 | `net_transfer_capacities` | 11.1 | NTC between two bidding zones |
@@ -193,7 +193,7 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 ### Transmission
 
 | Tool | ENTSO-E dataset | Description |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | `cross_border_physical_flows` | 12.1.G | Physical cross-border flows |
 | `total_commercial_sched` | 12.1.F | Total commercial schedules |
 | `net_positions` | 12.1.H | Net positions |
@@ -202,7 +202,7 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 ### Outages
 
 | Tool | ENTSO-E dataset | Description |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | `outages_gen_units` | 15.1.A&B | Unavailability of generation units |
 | `outages_prod_units` | 15.1.C&D | Unavailability of production units |
 | `outages_transmission_grid` | 15.1.A&B | Unavailability in the transmission grid |
@@ -218,7 +218,7 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 ### Session DuckDB cache
 
 | Tool | Description |
-|---------------|---------------------------------------------------------|
+|----|----|
 | `sql_query` | Run a SQL query (DuckDB dialect) against cached tables. Returns CSV, capped at `max_rows` (default 100). Raise the cap for plotting (e.g. 800 for monthly hourly data); avoid values above 5000. |
 | `list_tables` | List every cached table in this session with row counts and column schemas. |
 | `describe_table` | Schema + row count + N sample rows for one named table. |
@@ -266,6 +266,7 @@ The cache lives for the lifetime of one Claude Desktop session (the `docker run 
 - **Always call `area_eic` first** to resolve a country name to its EIC code before querying data. Many countries have multiple bidding zones (e.g. Norway has NO1–NO5).
 - **Fetch generously, aggregate via SQL.** The 100-row cap only applies to `sql_query` output — the cached DuckDB table holds the full result. Fetch a month or year of data once, then aggregate down to weekly / daily values via `sql_query(...)`.
 - **For generation time-series**, omit `gen_type` to get all production types, or filter with codes like `B16` (Solar) or `B18` (Wind offshore).
+- **Never accept synthetic values.** Every data-fetching tool explicitly instructs the LLM not to generate synthetic data when a live ENTSO-E tool is available. If Claude produces values without calling a tool, ask it to retry using the appropriate tool.
 
 ## Data notes
 

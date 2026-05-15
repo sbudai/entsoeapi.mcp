@@ -4,6 +4,37 @@ editor_options:
     wrap: 80
 ---
 
+# entsoeapi.mcp 0.3.2
+
+## LLM guidance improvements
+
+- **Natural language trigger phrases**: all 22 tool descriptions (21 data-fetching
+  tools + `area_eic`) now lead with a human-phrasing sentence covering synonyms
+  users actually speak — e.g. *"power prices, spot prices, SDAC prices, EPEX
+  prices"* for `energy_prices`; *"total load, power demand, electricity
+  consumption"* for `load`; *"fuel mix, renewable generation, wind power output"*
+  for `gen_time_series` — plus explicit country/zone examples (Germany (DE-LU),
+  Austria (AT), Hungary (HU), France (FR), …). This improves tool routing
+  accuracy when the user asks in plain language rather than ENTSO-E document codes.
+
+- **Anti-hallucination instruction**: every data-fetching tool description now
+  contains *"Returns actual ENTSO-E data — do NOT generate synthetic
+  [prices/load/generation/…] when this tool is available."* This directly prevents
+  the LLM from substituting synthetic values when a live data tool is reachable.
+
+- **Balancing terminology**: `contracted_reserves` description now names FCR,
+  aFRR, mFRR, and RR by their full names alongside the ENTSO-E process type codes,
+  eliminating a routing gap for users who ask about frequency reserves by acronym.
+
+- **Third-country specifics**: `allocated_transfer_capacities_3rd_countries` now
+  lists example third countries (Ukraine, Serbia, Norway, Switzerland) for
+  border-specific queries.
+
+## Compatibility
+
+- No tool signatures, return types, argument names, or runtime dependencies change.
+  Tool count stays at 29.
+
 # entsoeapi.mcp 0.3.1
 
 ## Bug fix
