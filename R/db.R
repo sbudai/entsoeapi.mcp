@@ -31,14 +31,14 @@
 #'
 #' @noRd
 db_con <- function() {
-  if (is.null(.pkg_env$con) || !dbIsValid(.pkg_env$con)) {
-    .pkg_env$con <- dbConnect(drv = duckdb(), dbdir = ":memory:")
+  if (is.null(.pkg_env$con) || !dbIsValid(.pkg_env$con)) {  # nolint: object_usage_linter
+    .pkg_env$con <- dbConnect(drv = duckdb(), dbdir = ":memory:")  # nolint: object_usage_linter
     # Best-effort clean shutdown when the R session exits. `try()` guards
     # against the (rare) case where the connection is already dead.
     reg.finalizer(
       e = .pkg_env,
       f = \(env) {
-        try(expr = dbDisconnect(conn = env$con, shutdown = TRUE), silent = TRUE)
+        try(expr = dbDisconnect(conn = env$con, shutdown = TRUE), silent = TRUE)  # nolint: object_usage_linter
       },
       onexit = TRUE
     )
@@ -66,7 +66,7 @@ db_con <- function() {
 #' @noRd
 db_table_name <- function(prefix, args_list) {
   h <- substr(
-    x = digest(object = args_list, algo = "md5"), start = 1L, stop = 6L
+    x = digest(object = args_list, algo = "md5"), start = 1L, stop = 6L  # nolint: object_usage_linter
   )
   paste0(prefix, "_", h)
 }
@@ -184,7 +184,7 @@ db_table_name <- function(prefix, args_list) {
 #'
 #' @noRd
 .detect_multi_series <- function(con, table) {
-  cols <- dbListFields(conn = con, name = table)
+  cols <- dbListFields(conn = con, name = table)  # nolint: object_usage_linter
   candidates <- c(
     "sequence", "time_series_mrid", "auction_type",
     "business_type", "process_type", "ts_business_type",
@@ -195,9 +195,9 @@ db_table_name <- function(prefix, args_list) {
 
   out <- character(0L)
   for (col in cols_to_check) {
-    qcol <- dbQuoteIdentifier(conn = con, x = col)
-    qtab <- dbQuoteIdentifier(conn = con, x = table)
-    vals <- dbGetQuery(
+    qcol <- dbQuoteIdentifier(conn = con, x = col)  # nolint: object_usage_linter
+    qtab <- dbQuoteIdentifier(conn = con, x = table)  # nolint: object_usage_linter
+    vals <- dbGetQuery(  # nolint: object_usage_linter
       conn = con,
       statement = sprintf(
         fmt = "SELECT DISTINCT %s AS v FROM %s WHERE %s IS NOT NULL LIMIT 10",
@@ -301,8 +301,8 @@ db_store <- function(df, prefix, args_list, preview_rows = 5L) {
   table <- db_table_name(prefix = prefix, args_list = args_list)
 
   # Cache hit: same args -> same table -> skip the INSERT.
-  if (!dbExistsTable(conn = con, name = table)) {
-    dbWriteTable(
+  if (!dbExistsTable(conn = con, name = table)) {  # nolint: object_usage_linter
+    dbWriteTable(  # nolint: object_usage_linter
       conn = con,
       name = table,
       value = df,
@@ -311,7 +311,7 @@ db_store <- function(df, prefix, args_list, preview_rows = 5L) {
     )
   }
 
-  n_rows <- dbGetQuery(
+  n_rows <- dbGetQuery(  # nolint: object_usage_linter
     conn = con,
     statement = sprintf(fmt = "SELECT COUNT(*) AS n FROM %s", table)
   )$n
@@ -351,7 +351,7 @@ db_store <- function(df, prefix, args_list, preview_rows = 5L) {
 db_query <- function(sql, max_rows = 100L) {
   con <- db_con()
   result <- tryCatch(
-    expr  = dbGetQuery(conn = con, statement = sql),
+    expr  = dbGetQuery(conn = con, statement = sql),  # nolint: object_usage_linter
     error = \(e) e
   )
   if (inherits(x = result, what = "error")) {
@@ -387,12 +387,12 @@ db_query <- function(sql, max_rows = 100L) {
 #' @noRd
 db_list <- function() {
   con  <- db_con()
-  tabs <- dbListTables(conn = con)
+  tabs <- dbListTables(conn = con)  # nolint: object_usage_linter
   if (length(tabs) == 0L) return("(no cached tables)")
   rows_per <- vapply(
     X = tabs,
     FUN = \(t) {
-      res <- dbGetQuery(
+      res <- dbGetQuery(  # nolint: object_usage_linter
         conn = con,
         statement = sprintf(fmt = "SELECT COUNT(*) AS n FROM %s", t)
       )
@@ -403,7 +403,7 @@ db_list <- function() {
   cols_per <- vapply(
     X = tabs,
     FUN = \(t) {
-      fields <- dbListFields(conn = con, name = t)
+      fields <- dbListFields(conn = con, name = t)  # nolint: object_usage_linter
       paste(fields, collapse = ";")
     },
     FUN.VALUE = character(1L)
@@ -431,14 +431,14 @@ db_list <- function() {
 #' @noRd
 db_describe <- function(name, n_preview = 5L) {
   con <- db_con()
-  if (!dbExistsTable(conn = con, name = name)) {
+  if (!dbExistsTable(conn = con, name = name)) {  # nolint: object_usage_linter
     return(paste0("# error: table '", name, "' not found"))
   }
-  preview <- dbGetQuery(
+  preview <- dbGetQuery(  # nolint: object_usage_linter
     conn = con,
     statement = sprintf(fmt = "SELECT * FROM %s LIMIT %d", name, n_preview)
   )
-  n_rows <- dbGetQuery(
+  n_rows <- dbGetQuery(  # nolint: object_usage_linter
     conn = con,
     statement = sprintf(fmt = "SELECT COUNT(*) AS n FROM %s", name)
   )$n

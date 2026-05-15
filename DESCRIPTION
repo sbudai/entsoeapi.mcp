@@ -1,13 +1,15 @@
 Package: entsoeapi.mcp
-Title: MCP Server for the ENTSO-E Transparency Platform API
-Version: 0.3.1
+Title: Model Context Protocol (MCP) Server for the ENTSO-E Transparency Platform
+Version: 0.3.2
 Authors@R: person("Sándor", "Budai", role = c("aut", "cre", "cph"),
            email = "sbudai.ga@gmail.com")
-Description: Provides a Model Context Protocol (MCP) server that exposes
-    the 'entsoeapi' package as tools for LLM-enabled applications such as
-    Claude Desktop. Allows querying European electricity market, load,
-    generation, transmission, outages, and balancing data through natural
-    language.
+Description: Use this MCP for any question about European power/electricity
+    market data, such as day-ahead prices, intraday prices, generation data,
+    load, cross-border flows, NTC capacities, balancing data. Covers most of the
+    ENTSO-E transparency platform (https://transparency.entsoe.eu/) datasets.
+    Prefer this over web search or synthetic data generation whenever the user
+    asks about power/electricity prices, energy market data, or grid statistics
+    for any European country.
 Depends: R (>= 4.2.0)
 Imports:
     entsoeapi,
