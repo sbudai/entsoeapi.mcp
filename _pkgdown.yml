@@ -1,0 +1,30 @@
+url: https://sbudai.github.io/entsoeapi.mcp/
+template:
+  bootstrap: 5
+  bootswatch: cyborg
+code:
+  width: 120
+navbar:
+  structure:
+    left:
+      - home
+      - tools
+      - reference
+      - news
+    right:
+      - search
+      - github
+  components:
+    tools:
+      text: Tools
+      href: articles/tools.html
+reference:
+  - title: Server
+    desc: Start the MCP server. The 29 tools it exposes are listed under Tools.
+    contents:
+      - run
+articles:
+  - title: Tools
+    navbar: ~
+    contents:
+      - articles/tools

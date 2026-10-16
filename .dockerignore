@@ -19,3 +19,6 @@ RELEASE_CHECKLIST.md
 tests
 Dockerfile
 .dockerignore
+_pkgdown.yml
+docs
+vignettes

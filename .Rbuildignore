@@ -9,3 +9,7 @@ build.log
 ^README.Rmd
 ^RELEASE_CHECKLIST.md
 ^LICENSE.md
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^vignettes/articles$
