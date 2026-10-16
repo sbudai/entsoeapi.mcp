@@ -1,0 +1,83 @@
+---
+title: "MCP tools"
+description: >
+  Every tool the server exposes to the LLM, with the description and
+  arguments the LLM sees.
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, results = "asis")
+
+# This page is generated from the tool definitions themselves, so it always
+# matches what the server exposes to the LLM.
+tools <- entsoeapi.mcp:::all_tools()
+tool_names <- vapply(
+  X = tools, FUN = \(t) attr(x = t, which = "name"), FUN.VALUE = character(1L)
+)
+
+# Section of each tool; a tool missing from this list lands under "Other".
+sections <- list(
+  "EIC lookup and news" = c(
+    "area_eic", "party_eic", "all_approved_eic", "resource_object_eic",
+    "get_news"
+  ),
+  "Load" = "load",
+  "Generation" = c("gen_time_series", "gen_capacity"),
+  "Market" = c(
+    "energy_prices", "intraday_prices", "net_transfer_capacities",
+    "day_ahead_commercial_sched", "explicit_offered_transfer_capacities",
+    "flow_based_allocations", "congestion_income",
+    "allocated_transfer_capacities_3rd_countries"
+  ),
+  "Transmission" = c(
+    "cross_border_physical_flows", "total_commercial_sched",
+    "net_positions", "forecasted_transfer_capacities"
+  ),
+  "Outages" = c(
+    "outages_gen_units", "outages_prod_units", "outages_transmission_grid"
+  ),
+  "Balancing" = c("imbalance_prices", "imbalance_volumes", "contracted_reserves"),
+  "Session DuckDB cache" = c("sql_query", "list_tables", "describe_table")
+)
+sections[["Other"]] <- setdiff(tool_names, unlist(sections))
+
+# markdown table cells must not contain pipes or line breaks
+cell <- \(x) gsub(pattern = "\\|", replacement = "\\\\|", x = gsub("\n", " ", x))
+
+render_tool <- function(tool) {
+  cat("### `", attr(x = tool, which = "name"), "`\n\n", sep = "")
+  cat(attr(x = tool, which = "description"), "\n\n", sep = "")
+  args <- attr(x = tool, which = "arguments")@properties
+  if (length(args) == 0L) {
+    cat("*No arguments.*\n\n")
+    return(invisible())
+  }
+  cat("| Argument | Required | Description |\n|---|---|---|\n")
+  for (nm in names(args)) {
+    cat(
+      "| `", nm, "` | ", if (isTRUE(args[[nm]]@required)) "yes" else "no",
+      " | ", cell(args[[nm]]@description), " |\n",
+      sep = ""
+    )
+  }
+  cat("\n")
+}
+```
+
+The server exposes **`r length(tools)` tools**. The time-series tools store
+their full result in a session DuckDB table and return a short summary that
+points at it. The LLM then uses `sql_query` to aggregate, filter or join.
+The EIC lookup tools and `get_news` return CSV directly. All dates are
+`YYYY-MM-DD`, interpreted in CET.
+
+The descriptions below are exactly what the LLM reads when it decides which
+tool to call and how.
+
+```{r tools}
+for (section in names(sections)) {
+  in_section <- tools[tool_names %in% sections[[section]]]
+  if (length(in_section) == 0L) next
+  cat("## ", section, "\n\n", sep = "")
+  for (tool in in_section) render_tool(tool)
+}
+```

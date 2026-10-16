@@ -26,8 +26,10 @@ Suggests:
 Remotes:
     krose/entsoeapi
 License: MIT + file LICENSE
-URL: https://github.com/sbudai/entsoeapi.mcp
+URL: https://github.com/sbudai/entsoeapi.mcp,
+    https://sbudai.github.io/entsoeapi.mcp/
 BugReports: https://github.com/sbudai/entsoeapi.mcp/issues
+Config/Needs/website: knitr, rmarkdown
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Collation:

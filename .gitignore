@@ -23,3 +23,6 @@ Thumbs.db
 .claude/
 .opencode/
 .positai
+
+# pkgdown site (built and deployed by GitHub Actions)
+docs/

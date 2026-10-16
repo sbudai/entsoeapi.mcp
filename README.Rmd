@@ -40,7 +40,7 @@ cov_pct <- round(covr::percent_coverage(covr::package_coverage(path = ".")))
 
 <!-- badges: start -->
 
-![Tests](https://img.shields.io/badge/tests-%60r%20n_tests_total%60%20passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-%60r%20cov_pct%60%25-brightgreen) ![Tools](https://img.shields.io/badge/tools-%60r%20n_tools%60-blue) ![R](https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue) ![License](https://img.shields.io/badge/license-MIT-blue)
+![Tests](https://img.shields.io/badge/tests-`r n_tests_total`%20passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-`r cov_pct`%25-brightgreen) ![Tools](https://img.shields.io/badge/tools-`r n_tools`-blue) ![R](https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 <!-- badges: end -->
 
@@ -325,7 +325,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
   | docker run --rm -i -e ENTSOE_PAT=test sbudai/entsoeapi.mcp:latest
 ```
 
-The image is built in two stages: [`rocker/r-ver`](https://rocker-project.org) installs the pre-built Linux binaries from [Posit Public Package Manager](https://packagemanager.posit.co), then R and the packages are copied onto a plain `ubuntu:noble` together with only the shared libraries they link against (~230 MB instead of ~1.8 GB). It runs as a non-root `mcp` user. Override the R version with `--build-arg R_VERSION=4.6.1`.
+The image is built in two stages: [`rocker/r-ver`](https://rocker-project.org) installs the pre-built Linux binaries from [Posit Public Package Manager](https://packagemanager.posit.co), then R and the packages are copied onto a plain `ubuntu:noble` together with only the shared libraries they link against (\~230 MB instead of \~1.8 GB). It runs as a non-root `mcp` user. Override the R version with `--build-arg R_VERSION=4.6.1`.
 
 ------------------------------------------------------------------------
 
