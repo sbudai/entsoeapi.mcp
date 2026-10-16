@@ -24,15 +24,37 @@
 #' If the connection has been invalidated (e.g. by a test that closed it),
 #' it is re-opened transparently.
 #'
+#' The database is sandboxed, because `sql_query` runs whatever SQL the LLM
+#' writes: no file system or network access (`read_csv()`, `COPY ... TO`,
+#' `ATTACH`, extension installs), a memory cap so a runaway query errors out
+#' instead of getting the process killed, and a locked configuration so the
+#' SQL cannot lift these limits with `SET`.
+#'
+#' @param memory_limit DuckDB memory cap. Read from `ENTSOEAPI_MCP_DB_MEMORY`,
+#'   default `"1GB"`.
+#'
 #' @return A live `duckdb_connection` valid for the package session.
 #'
-#' @importFrom DBI dbIsValid dbConnect dbDisconnect
+#' @importFrom DBI dbIsValid dbConnect dbDisconnect dbExecute
 #' @importFrom duckdb duckdb
 #'
 #' @noRd
-db_con <- function() {
+db_con <- function(
+  memory_limit = Sys.getenv(x = "ENTSOEAPI_MCP_DB_MEMORY", unset = "1GB")
+) {
   if (is.null(.pkg_env$con) || !dbIsValid(.pkg_env$con)) {  # nolint: object_usage_linter
-    .pkg_env$con <- dbConnect(drv = duckdb(), dbdir = ":memory:")  # nolint: object_usage_linter
+    con <- dbConnect(drv = duckdb(), dbdir = ":memory:")  # nolint: object_usage_linter
+    # Applied with SET after connecting: as startup config,
+    # enable_external_access = false stops the R driver from setting its
+    # temp_directory. lock_configuration must come last.
+    for (stmt in c(
+      "SET enable_external_access = false",
+      sprintf("SET memory_limit = '%s'", memory_limit),
+      "SET lock_configuration = true"
+    )) {
+      dbExecute(conn = con, statement = stmt)  # nolint: object_usage_linter
+    }
+    .pkg_env$con <- con
     # Best-effort clean shutdown when the R session exits. `try()` guards
     # against the (rare) case where the connection is already dead.
     reg.finalizer(
@@ -52,7 +74,8 @@ db_con <- function() {
 #' `db_table_name("load_actual", list(eic = "...", ps = ..., pe = ...))`
 #' -> `"load_actual_a3f7d2"`. Identical args always hash to the same suffix,
 #' which means repeat calls within a session reuse the existing cached
-#' table - no second hit to the ENTSO-E API.
+#' table - no second hit to the ENTSO-E API (`safe_to_cache()` checks for
+#' the table before the API call is evaluated).
 #'
 #' Six hex chars give 16.7M-name space, plenty for a session-scoped cache.
 #'

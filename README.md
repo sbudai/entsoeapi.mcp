@@ -66,7 +66,7 @@ Add the `entsoe` entry under `"mcpServers"`:
   "mcpServers": {
     "entsoe": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", "-e", "ENTSOE_PAT", "sbudai/entsoeapi.mcp:latest"],
+      "args": ["run", "--rm", "-i", "-e", "ENTSOE_PAT", "-v", "entsoeapi-cache:/home/mcp/.cache", "sbudai/entsoeapi.mcp:latest"],
       "env": {
         "ENTSOE_PAT": "your-entsoe-api-token-here"
       }
@@ -80,6 +80,7 @@ Key flags:
 - `--rm` — removes the container when the session ends (no container accumulation)
 - `-i` — keeps stdin open, required for MCP stdio transport
 - `-e ENTSOE_PAT` — forwards the token from Claude Desktop into the container
+- `-v entsoeapi-cache:/home/mcp/.cache` — optional; keeps the downloaded EIC code tables in a named volume for a day, so the EIC lookup tools answer instantly in later sessions instead of re-downloading them
 
 ### Step 4 — Restart Claude Desktop and verify
 
@@ -217,6 +218,8 @@ dt_start,price,sequence
 
 The cache lives for the lifetime of one Claude Desktop session (the `docker run --rm -i` container). Identical queries within a session reuse the same table — no second API hit.
 
+The database is sandboxed: SQL cannot read or write files, reach the network, install extensions, or change settings, and its memory is capped at 1 GB (override with `-e ENTSOEAPI_MCP_DB_MEMORY=2GB`).
+
 **Example workflow** Claude would run for *“Weekly average German load for January 2024”*:
 
 1.  `area_eic(query = "Germany")` — resolve EIC code
@@ -286,7 +289,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
   | docker run --rm -i -e ENTSOE_PAT=test sbudai/entsoeapi.mcp:latest
 ```
 
-The image is based on [`rocker/r-ver:4.4.3`](https://rocker-project.org), uses [Posit Public Package Manager](https://packagemanager.posit.co) for pre-built Linux binaries, and runs as a non-root `mcp` user.
+The image is built in two stages: [`rocker/r-ver`](https://rocker-project.org) installs the pre-built Linux binaries from [Posit Public Package Manager](https://packagemanager.posit.co), then R and the packages are copied onto a plain `ubuntu:noble` together with only the shared libraries they link against (~230 MB instead of ~1.8 GB). It runs as a non-root `mcp` user. Override the R version with `--build-arg R_VERSION=4.6.1`.
 
 ------------------------------------------------------------------------
 

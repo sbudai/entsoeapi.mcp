@@ -8,6 +8,13 @@
 #' underlying `entsoeapi` functions call `Sys.getenv("ENTSOE_PAT")` as their
 #' default `security_token`.
 #'
+#' The downloaded EIC code tables are cached on disk across server sessions,
+#' so the EIC lookup tools answer instantly after the first download of the
+#' day. The cache lives in `ENTSOEAPI_CACHE_DIR` when that environment
+#' variable is set, otherwise in `tools::R_user_dir("entsoeapi", "cache")`.
+#' Set `ENTSOEAPI_CACHE_DIR` to an empty string to keep the cache in memory.
+#' An `entsoeapi.cache_dir` option set before calling `run()` is respected.
+#'
 #' @param session_tools Logical. If `TRUE`, expose tools that can register
 #'   additional tools at runtime. Defaults to `FALSE`.
 #'
@@ -17,11 +24,48 @@
 #'
 #' @export
 run <- function(session_tools = FALSE) {
+  use_eic_disk_cache()
   mcp_server(  # nolint: object_usage_linter
     tools = lapply(X = all_tools(), FUN = mute_stdout_tool),
     session_tools = session_tools
   ) |>
     invisible()
+}
+
+
+#' Switch the entsoeapi EIC table cache from memory to disk.
+#'
+#' entsoeapi (>= 1.3.0) caches the downloaded EIC code tables in memory by
+#' default, which means every new MCP server process (one per client session)
+#' downloads them again. The disk cache is enabled via the
+#' `entsoeapi.cache_dir` option. `cachem::cache_disk()` errors when it cannot
+#' create its directory, which would break every EIC tool, so the directory is
+#' only used when it is writable; otherwise the in-memory cache is kept.
+#'
+#' @param cache_dir Directory of the disk cache. An empty string disables it.
+#'
+#' @return The cache directory in use (invisibly), or `NULL` when the
+#'   in-memory cache is kept.
+#'
+#' @noRd
+use_eic_disk_cache <- function(
+  cache_dir = Sys.getenv(
+    x = "ENTSOEAPI_CACHE_DIR",
+    unset = tools::R_user_dir(package = "entsoeapi", which = "cache")
+  )
+) {
+  # an explicit user choice wins
+  if (!is.null(getOption("entsoeapi.cache_dir"))) {
+    return(invisible(getOption("entsoeapi.cache_dir")))
+  }
+  if (!nzchar(cache_dir)) return(invisible(NULL))
+
+  dir.create(path = cache_dir, showWarnings = FALSE, recursive = TRUE)
+  writable <- dir.exists(cache_dir) &&
+    file.access(names = cache_dir, mode = 2L) == 0L
+  if (!writable) return(invisible(NULL))
+  options(entsoeapi.cache_dir = cache_dir)
+  invisible(cache_dir)
 }
 
 

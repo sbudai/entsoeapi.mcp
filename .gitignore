@@ -13,7 +13,6 @@
 .env
 
 # Docker build artifacts
-.dockerignore
 build.log
 
 # OS

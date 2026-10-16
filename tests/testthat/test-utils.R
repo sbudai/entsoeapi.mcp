@@ -182,3 +182,42 @@ testthat::test_that(
     testthat::expect_equal(object = parsed$b, expected = "two")
   }
 )
+
+
+# ── parse_date() validation ──────────────────────────────────────────────────
+
+testthat::test_that(
+  desc = "parse_date() names the argument and expected format on bad input",
+  code = {
+    period_start <- "Oct 1"
+    testthat::expect_error(
+      object = entsoeapi.mcp:::parse_date(period_start),
+      regexp = "^period_start must be a date in YYYY-MM-DD format.*Oct 1"
+    )
+  }
+)
+
+testthat::test_that(
+  desc = "parse_date() rejects NA, empty, non-character and vector input",
+  code = {
+    for (bad in list(NA_character_, "", 20240315, c("2024-01-01", "2024-01-02"))) {
+      testthat::expect_error(
+        object = entsoeapi.mcp:::parse_date(ts = bad),
+        regexp = "must be a date in YYYY-MM-DD format"
+      )
+    }
+  }
+)
+
+testthat::test_that(
+  desc = "parse_date() errors without warnings for impossible dates",
+  code = {
+    testthat::expect_no_warning(
+      object = try(entsoeapi.mcp:::parse_date(ts = "2024-02-30"), silent = TRUE)
+    )
+    testthat::expect_error(
+      object = entsoeapi.mcp:::parse_date(ts = "2024-02-30"),
+      regexp = "^date must be a date in YYYY-MM-DD format.*2024-02-30"
+    )
+  }
+)

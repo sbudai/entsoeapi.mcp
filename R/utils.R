@@ -1,18 +1,40 @@
 #' Parse a date string to a CET-timezone POSIXct
 #'
+#' An unparseable value raises an error naming the argument and the expected
+#' format, so the LLM can correct the call. Without it, `ymd()` quietly
+#' returns `NA`, and the error surfacing later from entsoeapi does not say
+#' which value was wrong.
+#'
 #' @param ts A date string in `"YYYY-MM-DD"` format, or a `POSIXct` object
 #'   (passed through unchanged).
 #' @param tz Time zone string passed to `lubridate::ymd()`; defaults to
 #'   `"CET"`.
+#' @param arg Name used in the error message; defaults to the variable
+#'   passed as `ts` (e.g. `period_start`).
 #'
 #' @importFrom lubridate ymd
 #'
 #' @return a vector of class POSIXct
 #'
 #' @noRd
-parse_date <- function(ts, tz = "CET") {
+parse_date <- function(
+  ts,
+  tz = "CET",
+  arg = if (is.name(substitute(ts))) deparse(substitute(ts)) else "date"
+) {
   if (inherits(x = ts, what = "POSIXct")) return(ts)
-  ymd(ts, tz = tz)  # nolint: object_usage_linter
+  out <- if (is.character(ts) && length(ts) == 1L && !is.na(ts)) {
+    suppressWarnings(ymd(ts, tz = tz))  # nolint: object_usage_linter
+  }
+  if (length(out) != 1L || is.na(out)) {
+    got <- paste(deparse(ts), collapse = " ")
+    stop(
+      arg, " must be a date in YYYY-MM-DD format (e.g. '2024-03-15'), got ",
+      got,
+      call. = FALSE
+    )
+  }
+  out
 }
 
 
@@ -69,14 +91,27 @@ slim_ts <- function(
 #' Falls back to `safe_to_csv()` for NULL / empty frames and non-data-frame
 #' results (occasional `entsoeapi` helpers return nested lists).
 #'
+#' The tools pipe the `entsoeapi` call straight into this function, so `df`
+#' arrives as an unevaluated promise. The cache is checked BEFORE `df` is
+#' touched: when the same call was already made in this session, the API
+#' request is never sent and the cached table is described instead. Do not
+#' reference `df` above that check.
+#'
 #' @param df A data frame, or NULL / empty / list (handled gracefully).
 #' @param prefix Short label for the cached table name, e.g. `"load_actual"`.
 #' @param args_list Named list of identifying args (hashed into the suffix).
 #'
-#' @return The envelope text produced by `db_store()`, or a fallback string.
+#' @return The envelope text produced by `db_store()` / `db_describe()`, or a
+#'   fallback string.
+#'
+#' @importFrom DBI dbExistsTable
 #'
 #' @noRd
 safe_to_cache <- function(df, prefix, args_list) {
+  table <- db_table_name(prefix = prefix, args_list = args_list)  # nolint: object_usage_linter
+  if (dbExistsTable(conn = db_con(), name = table)) {  # nolint: object_usage_linter
+    return(db_describe(name = table))  # nolint: object_usage_linter
+  }
   if (is.null(df) || (is.data.frame(df) && nrow(df) == 0L)) return("(no data)")
   if (!is.data.frame(df)) return(safe_to_csv(df))
   df <- slim_ts(df = df)

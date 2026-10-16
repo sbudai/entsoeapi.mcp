@@ -933,3 +933,53 @@ testthat::test_that(
     )
   )
 )
+
+
+# ── .eic_filter() matching rules ─────────────────────────────────────────────
+
+testthat::test_that(
+  desc = ".eic_filter() treats the query as a case-insensitive regex",
+  code = {
+    df <- data.frame(
+      eic_code = c("X1", "X2", "X3"),
+      eic_display_name = c("DE-LU", "AT", "FR")
+    )
+    result <- entsoeapi.mcp:::.eic_filter(df = df, query = "de|at")
+    testthat::expect_equal(object = result$eic_code, expected = c("X1", "X2"))
+  }
+)
+
+testthat::test_that(
+  desc = ".eic_filter() matches an invalid regex literally, without warnings",
+  code = {
+    df <- data.frame(
+      eic_code = c("X1", "X2"),
+      eic_display_name = c("Unit C++ 1", "Unit C 2")
+    )
+    testthat::expect_no_warning(
+      object = result <- entsoeapi.mcp:::.eic_filter(df = df, query = "c++")
+    )
+    testthat::expect_equal(object = result$eic_code, expected = "X1")
+  }
+)
+
+testthat::test_that(
+  desc = ".eic_filter() never matches NA cells",
+  code = {
+    df <- data.frame(
+      eic_code = c("X1", "X2"),
+      eic_long_name = c(NA, "Natural gas")
+    )
+    result <- entsoeapi.mcp:::.eic_filter(df = df, query = "NA")
+    testthat::expect_equal(object = result$eic_code, expected = "X2")
+  }
+)
+
+testthat::test_that(
+  desc = ".eic_filter() returns zero rows, not an error, when nothing matches",
+  code = {
+    df <- data.frame(eic_code = c("X1", "X2"))
+    result <- entsoeapi.mcp:::.eic_filter(df = df, query = "zzz")
+    testthat::expect_equal(object = nrow(result), expected = 0L)
+  }
+)

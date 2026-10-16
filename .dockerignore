@@ -1,0 +1,21 @@
+# Only the package sources are needed to build the image
+.git
+.github
+.claude
+.positai
+.opencode
+.Rproj.user
+.Rhistory
+.RData
+.Renviron
+.env
+*.Rproj
+*.Rcheck
+*.tar.gz
+build.log
+README.Rmd
+README.md
+RELEASE_CHECKLIST.md
+tests
+Dockerfile
+.dockerignore
