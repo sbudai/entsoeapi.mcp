@@ -4,6 +4,66 @@ editor_options:
     wrap: 80
 ---
 
+# entsoeapi.mcp 0.4.0
+
+## entsoeapi 1.3.0
+
+- **Requires `entsoeapi (>= 1.3.0)`**. Version 1.3.0 parses API responses
+  about 10x faster and sends the split requests of a query in parallel (e.g.
+  the day-by-day requests of `gen_time_series(type = "per_unit")`). Version
+  1.2.1 adds the `constraint_ts_*` columns to `flow_based_allocations` and
+  fixes the A03 curve gap filling. No exported function or argument changed,
+  so the 29 tools keep their signatures.
+
+- **Persistent EIC cache**: `run()` now switches entsoeapi's EIC code table
+  cache to disk (`ENTSOEAPI_CACHE_DIR`, defaulting to
+  `tools::R_user_dir("entsoeapi", "cache")`), so the EIC lookup tools no
+  longer re-download the tables in every new MCP session. Entries expire after
+  one day. An `entsoeapi.cache_dir` option set by the user is respected; an
+  empty `ENTSOEAPI_CACHE_DIR` or an unwritable directory keeps the in-memory
+  cache. In Docker, mount a volume on `/home/mcp/.cache` to keep it.
+
+- The `gen_time_series` description no longer calls `per_unit` "slow"; it now
+  says that it sends one request per day, in parallel.
+
+## Speed and robustness
+
+- **Repeated queries no longer hit the API.** The session DuckDB cache was
+  checked only after the API call had been made, so an identical repeat call
+  downloaded and parsed the data again and then discarded it. `safe_to_cache()`
+  now checks for the table first; because the tools pipe the `entsoeapi` call
+  into it, the call is a lazy promise that is never evaluated on a cache hit
+  (e.g. 3.7 s -> instant for two days of day-ahead prices).
+- **Clear date errors**: `parse_date()` now fails with
+  `period_start must be a date in YYYY-MM-DD format (...), got "Oct 1"`
+  instead of passing `NA` on to entsoeapi, so the LLM can fix the call
+  straight away.
+- **Sandboxed `sql_query`**: the session DuckDB now runs with file system and
+  network access disabled (`read_csv()`, `COPY ... TO`, `ATTACH`, `INSTALL`),
+  a memory cap (`ENTSOEAPI_MCP_DB_MEMORY`, default `1GB`), and a locked
+  configuration, so LLM-written SQL cannot read container files, reach the
+  network, or exhaust memory. Temp tables and all queries work as before.
+- **Faster EIC filtering**: the `query` filter of the EIC tools is vectorised
+  per column (1.1 s -> 0.15 s on the 74k-row `all_approved_eic` table). A query
+  that is not a valid regular expression (e.g. `C++`) is matched literally
+  instead of failing, and empty cells no longer match the query `NA`.
+
+## Docker image
+
+- **~230 MB instead of ~1.8 GB.** Multi-stage build: `rocker/r-ver` installs
+  the binaries, then R and the packages are copied onto `ubuntu:noble` with
+  only the shared libraries they link against (worked out with `ldd` at build
+  time). pak no longer installs system requirements (a JDK, LLVM, compilers,
+  `-dev` headers, ...), and the build drops unused recommended packages,
+  package docs, the X11/cairo/Tcl-Tk modules and debug symbols.
+- Dependencies are now read from `DESCRIPTION`, so the image follows the
+  narrowed entsoeapi dependency tree (no more `tidyr`, `readr`, `vroom`,
+  `xmlconvert`, `httr`, ...) automatically; `mcptools` comes from CRAN.
+- R 4.6.1 (was 4.4.3), selectable with `--build-arg R_VERSION=...`.
+- The image is smoke-tested at build time (all namespaces load, DuckDB
+  connects, 29 tools register).
+- A `.dockerignore` keeps `.git`, `.RData`, etc. out of the build context.
+
 # entsoeapi.mcp 0.3.2
 
 ## LLM guidance improvements

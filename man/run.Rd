@@ -22,4 +22,11 @@ Claude Desktop). This function blocks until the client disconnects.
 The server reads \code{ENTSOE_PAT} from the environment automatically — the
 underlying \code{entsoeapi} functions call \code{Sys.getenv("ENTSOE_PAT")} as their
 default \code{security_token}.
+
+The downloaded EIC code tables are cached on disk across server sessions,
+so the EIC lookup tools answer instantly after the first download of the
+day. The cache lives in \code{ENTSOEAPI_CACHE_DIR} when that environment
+variable is set, otherwise in \code{tools::R_user_dir("entsoeapi", "cache")}.
+Set \code{ENTSOEAPI_CACHE_DIR} to an empty string to keep the cache in memory.
+An \code{entsoeapi.cache_dir} option set before calling \code{run()} is respected.
 }

@@ -478,3 +478,95 @@ testthat::test_that(
     testthat::expect_true(object  = grepl(pattern = "value",    x = env))
   }
 )
+
+
+testthat::test_that(
+  desc = "safe_to_cache() does not evaluate the fetch when the table exists",
+  code = {
+    .clear_db()
+    calls <- 0L
+    fetch <- \() {
+      calls <<- calls + 1L
+      data.frame(value = c(1.0, 2.0))
+    }
+    args <- list(seed = "lazy-fetch")
+    env1 <- fetch() |>
+      entsoeapi.mcp:::safe_to_cache(prefix = "lazy_test", args_list = args)
+    env2 <- fetch() |>
+      entsoeapi.mcp:::safe_to_cache(prefix = "lazy_test", args_list = args)
+    testthat::expect_identical(object = calls, expected = 1L)
+    testthat::expect_true(object = grepl(pattern = "# rows: 2", x = env2))
+    testthat::expect_true(
+      object = grepl(pattern = "# table: lazy_test_", x = env2)
+    )
+  }
+)
+
+
+testthat::test_that(
+  desc = "safe_to_cache() fetches again when the args differ",
+  code = {
+    .clear_db()
+    calls <- 0L
+    fetch <- \() {
+      calls <<- calls + 1L
+      data.frame(value = 1.0)
+    }
+    fetch() |>
+      entsoeapi.mcp:::safe_to_cache(prefix = "lazy2", args_list = list(a = 1))
+    fetch() |>
+      entsoeapi.mcp:::safe_to_cache(prefix = "lazy2", args_list = list(a = 2))
+    testthat::expect_identical(object = calls, expected = 2L)
+  }
+)
+
+
+# ── sandbox ──────────────────────────────────────────────────────────────────
+
+testthat::test_that(
+  desc = "sql_query cannot read or write files",
+  code = {
+    out_file <- tempfile(fileext = ".csv")
+    read_res <- entsoeapi.mcp:::db_query(
+      sql = sprintf("SELECT * FROM read_csv('%s')", tempfile())
+    )
+    write_res <- entsoeapi.mcp:::db_query(
+      sql = sprintf("COPY (SELECT 1) TO '%s'", out_file)
+    )
+    testthat::expect_match(object = read_res, regexp = "^# error: Permission")
+    testthat::expect_match(object = write_res, regexp = "^# error: Permission")
+    testthat::expect_false(object = file.exists(out_file))
+  }
+)
+
+
+testthat::test_that(
+  desc = "sql_query cannot lift the sandbox settings",
+  code = {
+    for (stmt in c(
+      "SET enable_external_access = true",
+      "SET memory_limit = '100GB'",
+      "SET lock_configuration = false"
+    )) {
+      testthat::expect_match(
+        object = entsoeapi.mcp:::db_query(sql = stmt),
+        regexp = "^# error:"
+      )
+    }
+  }
+)
+
+
+testthat::test_that(
+  desc = "the sandboxed connection still supports temp tables and queries",
+  code = {
+    .clear_db()
+    con <- entsoeapi.mcp:::db_con()
+    DBI::dbExecute(conn = con, statement = "CREATE TEMP TABLE tmp_t AS SELECT 7 AS v")
+    testthat::expect_match(
+      object = entsoeapi.mcp:::db_query(sql = "SELECT v FROM tmp_t"),
+      regexp = "7"
+    )
+    DBI::dbExecute(conn = con, statement = "DROP TABLE tmp_t")
+  }
+)

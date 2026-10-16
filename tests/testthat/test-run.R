@@ -98,6 +98,7 @@ testthat::test_that(
   code = {
     captured <- NULL
     testthat::with_mocked_bindings(
+      use_eic_disk_cache = \(...) invisible(NULL),
       mcp_server = \(tools, session_tools) {
         captured <<- list(tools = tools, session_tools = session_tools)
         invisible(NULL)
@@ -117,6 +118,7 @@ testthat::test_that(
   code = {
     captured <- NULL
     testthat::with_mocked_bindings(
+      use_eic_disk_cache = \(...) invisible(NULL),
       mcp_server = \(tools, session_tools) {
         captured <<- list(tools = tools, session_tools = session_tools)
         invisible(NULL)
@@ -135,6 +137,7 @@ testthat::test_that(
   code = {
     captured_tools <- NULL
     testthat::with_mocked_bindings(
+      use_eic_disk_cache = \(...) invisible(NULL),
       mcp_server = function(tools, session_tools) {
         captured_tools <<- tools
         invisible(NULL)
@@ -152,5 +155,65 @@ testthat::test_that(
       FUN.VALUE = logical(1L)
     )
     testthat::expect_true(object = all(classes))
+  }
+)
+
+# test use_eic_disk_cache()
+testthat::test_that(
+  desc = "use_eic_disk_cache() sets entsoeapi.cache_dir to a writable dir",
+  code = {
+    old <- options(entsoeapi.cache_dir = NULL)
+    on.exit(options(old), add = TRUE)
+    dir <- file.path(tempdir(), "eic-cache-ok")
+    on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+    res <- entsoeapi.mcp:::use_eic_disk_cache(cache_dir = dir)
+    testthat::expect_identical(object = res, expected = dir)
+    testthat::expect_identical(
+      object = getOption("entsoeapi.cache_dir"),
+      expected = dir
+    )
+    testthat::expect_true(object = dir.exists(dir))
+  }
+)
+
+testthat::test_that(
+  desc = "use_eic_disk_cache() keeps the memory cache for an empty dir",
+  code = {
+    old <- options(entsoeapi.cache_dir = NULL)
+    on.exit(options(old), add = TRUE)
+    res <- entsoeapi.mcp:::use_eic_disk_cache(cache_dir = "")
+    testthat::expect_null(object = res)
+    testthat::expect_null(object = getOption("entsoeapi.cache_dir"))
+  }
+)
+
+testthat::test_that(
+  desc = "use_eic_disk_cache() keeps the memory cache for an unusable dir",
+  code = {
+    old <- options(entsoeapi.cache_dir = NULL)
+    on.exit(options(old), add = TRUE)
+    # a regular file cannot serve as a cache directory
+    blocker <- tempfile()
+    file.create(blocker)
+    on.exit(unlink(blocker), add = TRUE)
+    res <- entsoeapi.mcp:::use_eic_disk_cache(
+      cache_dir = file.path(blocker, "sub")
+    )
+    testthat::expect_null(object = res)
+    testthat::expect_null(object = getOption("entsoeapi.cache_dir"))
+  }
+)
+
+testthat::test_that(
+  desc = "use_eic_disk_cache() respects a pre-set entsoeapi.cache_dir",
+  code = {
+    old <- options(entsoeapi.cache_dir = "/user/choice")
+    on.exit(options(old), add = TRUE)
+    res <- entsoeapi.mcp:::use_eic_disk_cache(cache_dir = tempdir())
+    testthat::expect_identical(object = res, expected = "/user/choice")
+    testthat::expect_identical(
+      object = getOption("entsoeapi.cache_dir"),
+      expected = "/user/choice"
+    )
   }
 )
