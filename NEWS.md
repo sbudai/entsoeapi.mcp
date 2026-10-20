@@ -4,6 +4,52 @@ editor_options:
     wrap: 80
 ---
 
+# entsoeapi.mcp 0.5.0
+
+- **Server instructions**: the MCP `initialize` reply now carries real
+  instructions for the model (resolve the EIC with `area_eic` first, fetch
+  once, answer with `sql_query` on the cached table, handle several series and
+  `# error:` results) instead of mcptools' generic "This provides information
+  about a running R session.". mcptools offers no argument for this, so
+  `run()` wraps its internal `capabilities()`; with an mcptools version that
+  lacks it, the server starts with the default text. `serverInfo` now reports
+  `entsoeapi.mcp` and the package version instead of "R mcptools server".
+
+- **Agent skill**: `inst/skills/entsoe-market-data/SKILL.md` describes the
+  workflow, a question-to-tool map and the common pitfalls (wrong area type,
+  several series in one table, UTC timestamps) for agents that load skills.
+
+- **DST-safe local time in cached tables**: every point timestamp column
+  (`ts_point_dt_start`, `bid_ts_point_dt_start`) now gets a `_cet` twin
+  holding the same instant in Central European wall-clock time (CET/CEST),
+  computed in R. The sandboxed DuckDB cannot load the ICU extension, so
+  `timezone()` was unavailable, and the advised fixed `+ INTERVAL 2 HOUR`
+  shift misplaced part of every DST changeover day. The envelope gets a
+  `# time:` note, the suggested query groups by the `_cet` column, and the
+  server instructions, SKILL.md, `sql_query` description and README say to
+  group by it. Envelope sample rows now keep `00:00:00` on midnight values,
+  and the multi-series WARNING lists values in sorted order.
+
+- **One dependency fewer**: `digest` is dropped. Cache table names are now
+  hashed with `rlang::hash()`; rlang is already installed as a dependency of
+  entsoeapi, mcptools and ellmer, so the install loses a compiled package.
+  Table name suffixes differ from 0.4.0, which only matters within a
+  session.
+
+- **Multi-series detection uses the real column names**: the envelope WARNING
+  now checks `ts_classification_sequence_position`, `ts_mrid` and
+  `ts_resolution`, the columns entsoeapi's tidy output actually carries, so
+  stacked day-ahead price series (e.g. a PT15M and a PT60M auction) are
+  flagged again. The suggested query prefers `ts_point_dt_start` and a
+  price/quantity column instead of averaging `ts_mrid`.
+
+- **Descriptions and README use real column names**: `energy_prices`,
+  `intraday_prices` and the `sql_query` example refer to
+  `ts_classification_sequence_position`, `ts_point_dt_start` and
+  `ts_point_quantity` instead of the non-existent `sequence`, `dt_start` and
+  `value` columns. The README example envelope and workflow come from real
+  ENTSO-E responses.
+
 # entsoeapi.mcp 0.4.0
 
 ## entsoeapi 1.3.0

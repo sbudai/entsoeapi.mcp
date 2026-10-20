@@ -438,11 +438,14 @@ tool_energy_prices <- tool(
     "1-year API limit.",
     "contract_type: 'A01' = Day ahead (default), 'A07' = Intraday.",
     "Use area_eic() to find the EIC code.",
-    "NOTE: ENTSO-E publishes multiple TimeSeries (sequences) per auction",
-    "document - typically Sequence 1 = the BINDING auction price, Sequence 2",
-    "= secondary / SDAC rerun / shadow series. The cached table may contain",
-    "all sequences; if the envelope WARNING reports multiple series, filter",
-    "explicitly (e.g. WHERE sequence = 1) before computing statistics, or",
+    "NOTE: ENTSO-E often publishes several TimeSeries per price document,",
+    "stacked in the cached table. Column",
+    "ts_classification_sequence_position tells them apart: 1 = the SDAC",
+    "day-ahead price, 2 = a second auction, often at another resolution",
+    "(ts_resolution PT15M vs PT60M). The same series can also repeat under",
+    "a different ts_mrid. When the envelope WARNING lists these columns,",
+    "filter before computing statistics (e.g. WHERE",
+    "ts_classification_sequence_position = 1 AND ts_mrid = <one id>), or",
     "ask the user which series they meant."
   ),
   arguments = list(
@@ -490,11 +493,12 @@ tool_intraday_prices <- tool(
     "Returns actual ENTSO-E data - do NOT generate synthetic prices.",
     "Specialised wrapper around the intraday contract type. Prefer 1-3 day",
     "date ranges (results capped at 100 rows). Max 1-year API limit.",
-    "NOTE: ENTSO-E publishes multiple TimeSeries (sequences) per auction",
-    "document - typically Sequence 1 = the BINDING auction price, Sequence 2",
-    "= secondary / shadow series. If the envelope WARNING reports multiple",
-    "series, filter explicitly (e.g. WHERE sequence = 1) before computing",
-    "statistics, or ask the user which series they meant."
+    "NOTE: ENTSO-E can publish several TimeSeries per price document,",
+    "stacked in the cached table. When the envelope WARNING lists columns",
+    "such as ts_classification_sequence_position, ts_mrid or ts_resolution,",
+    "filter on them before computing statistics (e.g. WHERE",
+    "ts_classification_sequence_position = 1), or ask the user which series",
+    "they meant."
   ),
   arguments = list(
     eic = type_string(description = "EIC code of the bidding zone."),
@@ -1409,8 +1413,10 @@ tool_sql_query <- tool(
   arguments = list(
     sql = type_string(
       description = paste(
-        "DuckDB SQL. Example: \"SELECT date_trunc('week', dt_start) AS wk,",
-        "AVG(value) FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1\"."
+        "DuckDB SQL. Example: \"SELECT date_trunc('week',",
+        "ts_point_dt_start_cet) AS wk, AVG(ts_point_quantity) FROM",
+        "load_actual_a3f7d2 GROUP BY 1 ORDER BY 1\". ts_point_dt_start is",
+        "UTC; ts_point_dt_start_cet is Central European local time."
       )
     ),
     max_rows = type_integer(
