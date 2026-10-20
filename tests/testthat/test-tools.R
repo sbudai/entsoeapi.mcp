@@ -983,3 +983,260 @@ testthat::test_that(
     testthat::expect_equal(object = nrow(result), expected = 0L)
   }
 )
+
+
+# ── tool_gen_time_series: wind_solar process_type ────────────────────────────
+
+testthat::test_that(
+  desc = paste(
+    "tool_gen_time_series passes process_type to gen_wind_solar_forecasts",
+    "and defaults it to A01 (day-ahead)"
+  ),
+  code = {
+    seen <- character()
+    run <- \(...) {
+      .with_imp_bindings(
+        bindings = list(
+          gen_wind_solar_forecasts = \(..., process_type) {
+            seen <<- c(seen, process_type)
+            data.frame(x = 1L)
+          }
+        ),
+        expr = testthat::with_mocked_bindings(
+          safe_to_cache = \(df, ...) {
+            force(df)
+            "csv"
+          },
+          .package = "entsoeapi.mcp",
+          entsoeapi.mcp:::tool_gen_time_series(
+            eic = "10Y1001A1001A82H",
+            period_start = "2026-09-01",
+            period_end = "2026-09-02",
+            type = "wind_solar",
+            ...
+          )
+        )
+      )
+    }
+    run()
+    run(process_type = "A40")
+    run(process_type = "A18")
+    testthat::expect_identical(
+      object = seen, expected = c("A01", "A40", "A18")
+    )
+  }
+)
+
+
+testthat::test_that(
+  desc = paste(
+    "tool_gen_time_series caches each wind_solar process_type separately",
+    "and leaves process_type out of the other types' cache key"
+  ),
+  code = {
+    keys <- list()
+    run <- \(...) {
+      .with_imp_bindings(
+        bindings = list(
+          gen_wind_solar_forecasts = \(...) data.frame(x = 1L),
+          gen_per_prod_type = \(...) data.frame(x = 1L)
+        ),
+        expr = testthat::with_mocked_bindings(
+          safe_to_cache = \(df, prefix, args_list) {
+            keys[[length(keys) + 1L]] <<- args_list
+            "csv"
+          },
+          .package = "entsoeapi.mcp",
+          entsoeapi.mcp:::tool_gen_time_series(
+            eic = "10Y1001A1001A82H",
+            period_start = "2026-09-01",
+            period_end = "2026-09-02",
+            ...
+          )
+        )
+      )
+    }
+    run(type = "wind_solar", process_type = "A40")
+    run(type = "actual", process_type = "A40")
+    testthat::expect_identical(
+      object = keys[[1L]]$process_type, expected = "A40"
+    )
+    testthat::expect_null(object = keys[[2L]]$process_type)
+  }
+)
+
+
+# ── tool_congestion_management switch() branches ─────────────────────────────
+
+testthat::test_that(
+  desc = paste(
+    "tool_congestion_management dispatches to redispatching_internal by",
+    "default"
+  ),
+  code = .expect_tool_calls(
+    tool_obj = entsoeapi.mcp:::tool_congestion_management,
+    entsoeapi_fns = "redispatching_internal",
+    call_args = list(
+      eic = "10YNL----------L",
+      period_start = "2026-09-01",
+      period_end = "2026-09-02"
+    )
+  )
+)
+
+
+testthat::test_that(
+  desc = paste(
+    "tool_congestion_management dispatches to redispatching_cross_border for",
+    "'redispatching_cross_border'"
+  ),
+  code = .expect_tool_calls(
+    tool_obj = entsoeapi.mcp:::tool_congestion_management,
+    entsoeapi_fns = "redispatching_cross_border",
+    call_args = list(
+      eic_in = "10YDE-EON------1",
+      eic_out = "10YAT-APG------L",
+      period_start = "2026-09-01",
+      period_end = "2026-09-03",
+      type = "redispatching_cross_border"
+    )
+  )
+)
+
+
+testthat::test_that(
+  desc = "tool_congestion_management dispatches to countertrading",
+  code = .expect_tool_calls(
+    tool_obj = entsoeapi.mcp:::tool_congestion_management,
+    entsoeapi_fns = "countertrading",
+    call_args = list(
+      eic_in = "10YFR-RTE------C",
+      eic_out = "10YES-REE------0",
+      period_start = "2026-09-01",
+      period_end = "2026-09-03",
+      type = "countertrading"
+    )
+  )
+)
+
+
+testthat::test_that(
+  desc = paste(
+    "tool_congestion_management dispatches to costs_of_congestion_management",
+    "for 'costs'"
+  ),
+  code = .expect_tool_calls(
+    tool_obj = entsoeapi.mcp:::tool_congestion_management,
+    entsoeapi_fns = "costs_of_congestion_management",
+    call_args = list(
+      eic = "10YBE----------2",
+      period_start = "2025-01-01",
+      period_end = "2025-12-31",
+      type = "costs"
+    )
+  )
+)
+
+
+testthat::test_that(
+  desc = paste(
+    "tool_congestion_management passes eic_in / eic_out in order and uses a",
+    "distinct cache prefix per type"
+  ),
+  code = {
+    got <- NULL
+    prefixes <- character()
+    run <- \(type) {
+      .with_imp_bindings(
+        bindings = list(
+          redispatching_cross_border = \(eic_in, eic_out, ...) {
+            got <<- c(eic_in, eic_out)
+            data.frame(x = 1L)
+          },
+          countertrading = \(...) data.frame(x = 1L)
+        ),
+        expr = testthat::with_mocked_bindings(
+          safe_to_cache = \(df, prefix, ...) {
+            force(df)
+            prefixes <<- c(prefixes, prefix)
+            "csv"
+          },
+          .package = "entsoeapi.mcp",
+          entsoeapi.mcp:::tool_congestion_management(
+            eic_in = "10YDE-EON------1",
+            eic_out = "10YAT-APG------L",
+            period_start = "2026-09-01",
+            period_end = "2026-09-03",
+            type = type
+          )
+        )
+      )
+    }
+    run(type = "redispatching_cross_border")
+    run(type = "countertrading")
+    testthat::expect_identical(
+      object = got, expected = c("10YDE-EON------1", "10YAT-APG------L")
+    )
+    testthat::expect_identical(
+      object = prefixes,
+      expected = c(
+        "congestion_redispatching_cross_border", "congestion_countertrading"
+      )
+    )
+  }
+)
+
+
+testthat::test_that(
+  desc = paste(
+    "tool_congestion_management errors with an informative message for an",
+    "unknown type"
+  ),
+  code = {
+    testthat::expect_error(
+      object = entsoeapi.mcp:::tool_congestion_management(
+        eic = "10YNL----------L",
+        period_start = "2026-09-01",
+        period_end = "2026-09-02",
+        type = "not_a_valid_type"
+      ),
+      regexp = "Unknown type"
+    )
+  }
+)
+
+
+testthat::test_that(
+  desc = paste(
+    "tool_congestion_management asks costs_of_congestion_management for the",
+    "tidy output and passes event_nature through"
+  ),
+  code = {
+    seen <- NULL
+    .with_imp_bindings(
+      bindings = list(
+        costs_of_congestion_management = \(..., event_nature, tidy_output) {
+          seen <<- list(event_nature = event_nature, tidy_output = tidy_output)
+          data.frame(x = 1L)
+        }
+      ),
+      expr = testthat::with_mocked_bindings(
+        safe_to_cache = \(df, ...) {
+          force(df)
+          "csv"
+        },
+        .package = "entsoeapi.mcp",
+        entsoeapi.mcp:::tool_congestion_management(
+          eic = "10YBE----------2",
+          period_start = "2025-01-01",
+          period_end = "2026-01-01",
+          type = "costs",
+          event_nature = "B03"
+        )
+      )
+    )
+    testthat::expect_identical(
+      object = seen, expected = list(event_nature = "B03", tidy_output = TRUE)
+    )
+  }
+)

@@ -1,6 +1,6 @@
 Package: entsoeapi.mcp
 Title: Model Context Protocol (MCP) Server for the ENTSO-E Transparency Platform
-Version: 0.5.0
+Version: 0.6.0
 Authors@R: person("Sándor", "Budai", role = c("aut", "cre", "cph"),
            email = "sbudai.ga@gmail.com")
 Description: Use this MCP for any question about European power/electricity
@@ -12,7 +12,7 @@ Description: Use this MCP for any question about European power/electricity
     for any European country.
 Depends: R (>= 4.2.0)
 Imports:
-    entsoeapi (>= 1.3.0),
+    entsoeapi (>= 1.3.1),
     mcptools,
     ellmer,
     lubridate,

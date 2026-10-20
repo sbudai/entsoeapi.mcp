@@ -365,6 +365,41 @@ testthat::test_that(
 
 testthat::test_that(
   desc = paste(
+    "safe_to_cache() reports the API's no-data acknowledgement instead of",
+    "caching a frame slim_ts() would empty"
+  ),
+  code = {
+    # shape of a real entsoeapi 1.3.0 acknowledgement (countertrading NL->DE)
+    ack <- data.frame(
+      created_date_time = as.POSIXct(x = "2026-10-20 06:47:24", tz = "UTC"),
+      reason_code = "999",
+      reason_text = paste(
+        "No matching data found for Data item COUNTERTRADING_R3 [13.1.B]"
+      )
+    )
+    out <- entsoeapi.mcp:::safe_to_cache(
+      df = ack, prefix = "ack_test", args_list = list(a = 1)
+    )
+    testthat::expect_identical(
+      object = out,
+      expected = paste(
+        "(no data) No matching data found for Data item COUNTERTRADING_R3",
+        "[13.1.B]"
+      )
+    )
+    testthat::expect_false(
+      object = any(
+        startsWith(
+          x = DBI::dbListTables(conn = entsoeapi.mcp:::db_con()),
+          prefix = "ack_test"
+        )
+      )
+    )
+  }
+)
+
+testthat::test_that(
+  desc = paste(
     "safe_to_cache() falls back to safe_to_csv() (JSON) for non-data-frame",
     "input"
   ),

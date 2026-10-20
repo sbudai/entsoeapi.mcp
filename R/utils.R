@@ -125,7 +125,7 @@ add_cet_time <- function(df, tz = "Europe/Brussels") {
 
 #' Cache a data frame in the session DuckDB and return an envelope.
 #'
-#' Used by the 21 time-series tools to push the full result into an in-memory
+#' Used by the 22 time-series tools to push the full result into an in-memory
 #' DuckDB table; the LLM then aggregates / filters / joins via the `sql_query`
 #' tool. Constant metadata columns are dropped first via `slim_ts()` — they
 #' waste DuckDB space *and* preview tokens — and `add_cet_time()` adds the
@@ -133,6 +133,12 @@ add_cet_time <- function(df, tz = "Europe/Brussels") {
 #'
 #' Falls back to `safe_to_csv()` for NULL / empty frames and non-data-frame
 #' results (occasional `entsoeapi` helpers return nested lists).
+#'
+#' When ENTSO-E has no data for the query it answers with an acknowledgement
+#' document, which entsoeapi returns as a one-row frame with only
+#' `created_date_time`, `reason_code` and `reason_text`. `slim_ts()` would
+#' drop all three as constant and DuckDB refuses a frame without columns, so
+#' that frame is reported as `(no data)` with the API's reason instead.
 #'
 #' The tools pipe the `entsoeapi` call straight into this function, so `df`
 #' arrives as an unevaluated promise. The cache is checked BEFORE `df` is
@@ -157,6 +163,11 @@ safe_to_cache <- function(df, prefix, args_list) {
   }
   if (is.null(df) || (is.data.frame(df) && nrow(df) == 0L)) return("(no data)")
   if (!is.data.frame(df)) return(safe_to_csv(df))
+  ack_cols <- c("created_date_time", "reason_code", "reason_text")
+  if (all(names(df) %in% ack_cols)) {
+    reason <- paste(unique(df$reason_text), collapse = "; ")
+    return(paste0("(no data) ", reason))
+  }
   df <- add_cet_time(df = slim_ts(df = df))
   db_store(df = df, prefix = prefix, args_list = args_list)  # nolint: object_usage_linter
 }
