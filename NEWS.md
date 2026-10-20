@@ -4,7 +4,27 @@ editor_options:
     wrap: 80
 ---
 
-# entsoeapi.mcp (0.6.0)
+# entsoeapi.mcp 0.6.1
+
+- **The Docker image builds again**: its build-time smoke test still expected
+  29 tools, so the image failed to build once 0.6.0 added
+  `congestion_management`. The test no longer hard-codes a count: it checks
+  that every tool defined in the package is served, under a unique name, as a
+  valid tool definition. Neither 0.5.0 nor 0.6.0 reached Docker Hub, so this is
+  the first image since 0.4.0 and carries the changes of both.
+
+- **Docker images are published by CI**: pushing a `vX.Y.Z` tag runs
+  `.github/workflows/docker.yaml`, which builds the image, smoke-tests it (MCP
+  `initialize`, `tools/list` lists every tool, runs as the non-root `mcp` user)
+  and pushes `sbudai/entsoeapi.mcp:vX.Y.Z` and `:latest`. An existing tag can be
+  (re)published with a manual run of the workflow.
+
+- **Release checklist**: the `initialize` smoke test passed without any output,
+  because the server exits as soon as stdin closes, before it answers; stdin is
+  now kept open. A `tools/list` smoke test was added, and section 7 describes
+  the CI publishing, with the manual `docker push` kept as a fallback.
+
+# entsoeapi.mcp 0.6.0
 
 ## entsoeapi 1.3.1
 
