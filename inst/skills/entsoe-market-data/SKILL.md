@@ -92,12 +92,14 @@ GROUP BY 1 ORDER BY 1
 | Intraday price | `intraday_prices` | |
 | Demand, consumption, load forecast | `load` | `type`: `actual`, `day_ahead`, `week_ahead`, `month_ahead`, `year_ahead`, `margin` |
 | Generation mix, renewables output | `gen_time_series` | `type`: `actual`, `wind_solar`, `day_ahead`, `per_unit`, `storage`; `gen_type` e.g. `B16` solar, `B19` wind onshore |
+| Wind / solar forecast | `gen_time_series` | `type = 'wind_solar'`; `process_type`: `A01` day-ahead (default), `A40` intraday, `A18` current |
 | Installed capacity | `gen_capacity` | takes a `year`, not a date range |
 | Physical cross-border flow | `cross_border_physical_flows` | `eic_in`, `eic_out` |
 | Transfer capacity (NTC, offered, forecast) | `net_transfer_capacities`, `explicit_offered_transfer_capacities`, `forecasted_transfer_capacities` | per border |
 | Commercial schedules, net position | `day_ahead_commercial_sched`, `total_commercial_sched`, `net_positions` | |
 | Flow-based market coupling | `flow_based_allocations` | Core / CWE region |
 | Congestion income, third-country capacity | `congestion_income`, `allocated_transfer_capacities_3rd_countries` | |
+| Redispatching, countertrading, congestion management costs | `congestion_management` | `type`: `redispatching_internal` (control-area `eic`), `redispatching_cross_border` and `countertrading` (`eic_in`, `eic_out`; try both directions), `costs` (monthly, currency in `ts_currency_unit_name`) |
 | Plant or grid outages | `outages_gen_units`, `outages_prod_units`, `outages_transmission_grid` | |
 | Imbalance price / volume, reserves | `imbalance_prices`, `imbalance_volumes`, `contracted_reserves` | |
 | Platform announcements | `get_news` | |
@@ -116,8 +118,9 @@ Each tool's own description lists its remaining codes and options.
   the user which series they mean before computing statistics.
 - **Wrong area type.** Prices requested with a control-area EIC, or load with
   a bidding-zone EIC, come back empty or misleading. Go back to step 1.
-- **`(no data)`** means ENTSO-E published nothing for that area and period.
-  Say so; do not fill the gap with estimates.
+- **`(no data)`** means ENTSO-E published nothing for that area and period;
+  the API's reason follows it when there is one. Say so; do not fill the gap
+  with estimates.
 - **Errors** come back as text starting with `# error:`. Read the message,
   fix the arguments (date format, EIC, code value) and retry.
 - **Time zone.** Input dates are CET, and `ts_point_dt_start` is UTC: a

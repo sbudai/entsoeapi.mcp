@@ -33,6 +33,7 @@ sections <- list(
     "cross_border_physical_flows", "total_commercial_sched",
     "net_positions", "forecasted_transfer_capacities"
   ),
+  "Congestion management" = "congestion_management",
   "Outages" = c(
     "outages_gen_units", "outages_prod_units", "outages_transmission_grid"
   ),

@@ -255,6 +255,10 @@ all_tools <- function() {
     tool_net_positions,  # nolint: object_usage_linter
     tool_forecasted_transfer_capacities,  # nolint: object_usage_linter
 
+    # Congestion management (merged: redispatching,  # nolint: commented_code_linter
+    #                        countertrading, costs)  # nolint: commented_code_linter
+    tool_congestion_management,  # nolint: object_usage_linter
+
     # Outages  # nolint: commented_code_linter
     tool_outages_gen_units,  # nolint: object_usage_linter
     tool_outages_prod_units,  # nolint: object_usage_linter

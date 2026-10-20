@@ -1,9 +1,9 @@
 testthat::test_that(
-  desc = "all_tools() returns a list of 29 tool definitions",
+  desc = "all_tools() returns a list of 30 tool definitions",
   code = {
     tools <- entsoeapi.mcp:::all_tools()
     testthat::expect_type(object = tools, type = "list")
-    testthat::expect_length(object = tools, n = 29L)
+    testthat::expect_length(object = tools, n = 30L)
   }
 )
 
@@ -110,7 +110,7 @@ testthat::test_that(
       }
     )
     testthat::expect_false(object = captured$session_tools)
-    testthat::expect_length(object = captured$tools, n = 29L)
+    testthat::expect_length(object = captured$tools, n = 30L)
   }
 )
 

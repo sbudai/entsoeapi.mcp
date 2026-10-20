@@ -4,15 +4,43 @@ editor_options:
     wrap: 80
 ---
 
+# entsoeapi.mcp (0.6.0)
+
+## entsoeapi 1.3.1
+
+- **New `congestion_management` tool** (ENTSO-E 13.1.A-C), one tool with a
+  `type` argument so the tool list sent with every request grows by one:
+  `redispatching_internal` (default, control-area `eic`),
+  `redispatching_cross_border` and `countertrading` (`eic_in`, `eic_out`), and
+  `costs` (monthly costs of redispatching, countertrading and other remedial
+  actions, optional `event_nature` `A46` / `B03` / `B04`).
+
+- **Requires entsoeapi \>= 1.3.1**, which fixed the tidy output of
+  `costs_of_congestion_management()` (the cost amount was dropped, monthly
+  points drifted to Mar 3 instead of Mar 1 and ignored CEST, and a sparse A03
+  series lost its last month). `costs` therefore returns
+  `ts_point_congestion_cost_price_amount` with one row per month, starting at
+  local midnight (CET/CEST) on the first of the month.
+
+- **`gen_time_series(type = "wind_solar")` takes `process_type`**: `A01`
+  day-ahead (new default), `A40` intraday or `A18` current forecast. Before,
+  only `A18` (entsoeapi's default) was reachable, although the tool and the
+  README called it a day-ahead forecast.
+
+- **No-data replies no longer fail**: when ENTSO-E has no data it sends an
+  acknowledgement, which entsoeapi returns as a one-row frame. Caching it
+  emptied every column and DuckDB raised "Data frame with at least one column
+  required". The tools now return `(no data)` followed by the API's reason.
+
 # entsoeapi.mcp 0.5.0
 
 - **Server instructions**: the MCP `initialize` reply now carries real
-  instructions for the model (resolve the EIC with `area_eic` first, fetch
-  once, answer with `sql_query` on the cached table, handle several series and
+  instructions for the model (resolve the EIC with `area_eic` first, fetch once,
+  answer with `sql_query` on the cached table, handle several series and
   `# error:` results) instead of mcptools' generic "This provides information
-  about a running R session.". mcptools offers no argument for this, so
-  `run()` wraps its internal `capabilities()`; with an mcptools version that
-  lacks it, the server starts with the default text. `serverInfo` now reports
+  about a running R session.". mcptools offers no argument for this, so `run()`
+  wraps its internal `capabilities()`; with an mcptools version that lacks it,
+  the server starts with the default text. `serverInfo` now reports
   `entsoeapi.mcp` and the package version instead of "R mcptools server".
 
 - **Agent skill**: `inst/skills/entsoe-market-data/SKILL.md` describes the
@@ -20,28 +48,27 @@ editor_options:
   several series in one table, UTC timestamps) for agents that load skills.
 
 - **DST-safe local time in cached tables**: every point timestamp column
-  (`ts_point_dt_start`, `bid_ts_point_dt_start`) now gets a `_cet` twin
-  holding the same instant in Central European wall-clock time (CET/CEST),
-  computed in R. The sandboxed DuckDB cannot load the ICU extension, so
-  `timezone()` was unavailable, and the advised fixed `+ INTERVAL 2 HOUR`
-  shift misplaced part of every DST changeover day. The envelope gets a
-  `# time:` note, the suggested query groups by the `_cet` column, and the
-  server instructions, SKILL.md, `sql_query` description and README say to
-  group by it. Envelope sample rows now keep `00:00:00` on midnight values,
-  and the multi-series WARNING lists values in sorted order.
+  (`ts_point_dt_start`, `bid_ts_point_dt_start`) now gets a `_cet` twin holding
+  the same instant in Central European wall-clock time (CET/CEST), computed
+  in R. The sandboxed DuckDB cannot load the ICU extension, so `timezone()` was
+  unavailable, and the advised fixed `+ INTERVAL 2 HOUR` shift misplaced part of
+  every DST changeover day. The envelope gets a `# time:` note, the suggested
+  query groups by the `_cet` column, and the server instructions, SKILL.md,
+  `sql_query` description and README say to group by it. Envelope sample rows
+  now keep `00:00:00` on midnight values, and the multi-series WARNING lists
+  values in sorted order.
 
 - **One dependency fewer**: `digest` is dropped. Cache table names are now
   hashed with `rlang::hash()`; rlang is already installed as a dependency of
-  entsoeapi, mcptools and ellmer, so the install loses a compiled package.
-  Table name suffixes differ from 0.4.0, which only matters within a
-  session.
+  entsoeapi, mcptools and ellmer, so the install loses a compiled package. Table
+  name suffixes differ from 0.4.0, which only matters within a session.
 
 - **Multi-series detection uses the real column names**: the envelope WARNING
   now checks `ts_classification_sequence_position`, `ts_mrid` and
   `ts_resolution`, the columns entsoeapi's tidy output actually carries, so
-  stacked day-ahead price series (e.g. a PT15M and a PT60M auction) are
-  flagged again. The suggested query prefers `ts_point_dt_start` and a
-  price/quantity column instead of averaging `ts_mrid`.
+  stacked day-ahead price series (e.g. a PT15M and a PT60M auction) are flagged
+  again. The suggested query prefers `ts_point_dt_start` and a price/quantity
+  column instead of averaging `ts_mrid`.
 
 - **Descriptions and README use real column names**: `energy_prices`,
   `intraday_prices` and the `sql_query` example refer to
@@ -54,20 +81,20 @@ editor_options:
 
 ## entsoeapi 1.3.0
 
-- **Requires `entsoeapi (>= 1.3.0)`**. Version 1.3.0 parses API responses
-  about 10x faster and sends the split requests of a query in parallel (e.g.
-  the day-by-day requests of `gen_time_series(type = "per_unit")`). Version
-  1.2.1 adds the `constraint_ts_*` columns to `flow_based_allocations` and
-  fixes the A03 curve gap filling. No exported function or argument changed,
-  so the 29 tools keep their signatures.
+- **Requires `entsoeapi (>= 1.3.0)`**. Version 1.3.0 parses API responses about
+  10x faster and sends the split requests of a query in parallel (e.g. the
+  day-by-day requests of `gen_time_series(type = "per_unit")`). Version 1.2.1
+  adds the `constraint_ts_*` columns to `flow_based_allocations` and fixes the
+  A03 curve gap filling. No exported function or argument changed, so the 29
+  tools keep their signatures.
 
 - **Persistent EIC cache**: `run()` now switches entsoeapi's EIC code table
   cache to disk (`ENTSOEAPI_CACHE_DIR`, defaulting to
-  `tools::R_user_dir("entsoeapi", "cache")`), so the EIC lookup tools no
-  longer re-download the tables in every new MCP session. Entries expire after
-  one day. An `entsoeapi.cache_dir` option set by the user is respected; an
-  empty `ENTSOEAPI_CACHE_DIR` or an unwritable directory keeps the in-memory
-  cache. In Docker, mount a volume on `/home/mcp/.cache` to keep it.
+  `tools::R_user_dir("entsoeapi", "cache")`), so the EIC lookup tools no longer
+  re-download the tables in every new MCP session. Entries expire after one day.
+  An `entsoeapi.cache_dir` option set by the user is respected; an empty
+  `ENTSOEAPI_CACHE_DIR` or an unwritable directory keeps the in-memory cache. In
+  Docker, mount a volume on `/home/mcp/.cache` to keep it.
 
 - The `gen_time_series` description no longer calls `per_unit` "slow"; it now
   says that it sends one request per day, in parallel.
@@ -79,58 +106,60 @@ editor_options:
   downloaded and parsed the data again and then discarded it. `safe_to_cache()`
   now checks for the table first; because the tools pipe the `entsoeapi` call
   into it, the call is a lazy promise that is never evaluated on a cache hit
-  (e.g. 3.7 s -> instant for two days of day-ahead prices).
+  (e.g. 3.7 s -\> instant for two days of day-ahead prices).
 - **Clear date errors**: `parse_date()` now fails with
-  `period_start must be a date in YYYY-MM-DD format (...), got "Oct 1"`
-  instead of passing `NA` on to entsoeapi, so the LLM can fix the call
-  straight away.
+  `period_start must be a date in YYYY-MM-DD format (...), got "Oct 1"` instead
+  of passing `NA` on to entsoeapi, so the LLM can fix the call straight away.
 - **Sandboxed `sql_query`**: the session DuckDB now runs with file system and
-  network access disabled (`read_csv()`, `COPY ... TO`, `ATTACH`, `INSTALL`),
-  a memory cap (`ENTSOEAPI_MCP_DB_MEMORY`, default `1GB`), and a locked
+  network access disabled (`read_csv()`, `COPY ... TO`, `ATTACH`, `INSTALL`), a
+  memory cap (`ENTSOEAPI_MCP_DB_MEMORY`, default `1GB`), and a locked
   configuration, so LLM-written SQL cannot read container files, reach the
   network, or exhaust memory. Temp tables and all queries work as before.
 - **Faster EIC filtering**: the `query` filter of the EIC tools is vectorised
-  per column (1.1 s -> 0.15 s on the 74k-row `all_approved_eic` table). A query
+  per column (1.1 s -\> 0.15 s on the 74k-row `all_approved_eic` table). A query
   that is not a valid regular expression (e.g. `C++`) is matched literally
   instead of failing, and empty cells no longer match the query `NA`.
 
 ## Docker image
 
-- **~230 MB instead of ~1.8 GB.** Multi-stage build: `rocker/r-ver` installs
-  the binaries, then R and the packages are copied onto `ubuntu:noble` with
-  only the shared libraries they link against (worked out with `ldd` at build
-  time). pak no longer installs system requirements (a JDK, LLVM, compilers,
-  `-dev` headers, ...), and the build drops unused recommended packages,
-  package docs, the X11/cairo/Tcl-Tk modules and debug symbols.
+- **\~230 MB instead of \~1.8 GB.** Multi-stage build: `rocker/r-ver` installs
+  the binaries, then R and the packages are copied onto `ubuntu:noble` with only
+  the shared libraries they link against (worked out with `ldd` at build time).
+  pak no longer installs system requirements (a JDK, LLVM, compilers, `-dev`
+  headers, ...), and the build drops unused recommended packages, package docs,
+  the X11/cairo/Tcl-Tk modules and debug symbols.
 - Dependencies are now read from `DESCRIPTION`, so the image follows the
   narrowed entsoeapi dependency tree (no more `tidyr`, `readr`, `vroom`,
   `xmlconvert`, `httr`, ...) automatically; `mcptools` comes from CRAN.
 - R 4.6.1 (was 4.4.3), selectable with `--build-arg R_VERSION=...`.
-- The image is smoke-tested at build time (all namespaces load, DuckDB
-  connects, 29 tools register).
+- The image is smoke-tested at build time (all namespaces load, DuckDB connects,
+  29 tools register).
 - A `.dockerignore` keeps `.git`, `.RData`, etc. out of the build context.
 
 # entsoeapi.mcp 0.3.2
 
 ## LLM guidance improvements
 
-- **Natural language trigger phrases**: all 22 tool descriptions (21 data-fetching
-  tools + `area_eic`) now lead with a human-phrasing sentence covering synonyms
-  users actually speak — e.g. *"power prices, spot prices, SDAC prices, EPEX
-  prices"* for `energy_prices`; *"total load, power demand, electricity
-  consumption"* for `load`; *"fuel mix, renewable generation, wind power output"*
-  for `gen_time_series` — plus explicit country/zone examples (Germany (DE-LU),
-  Austria (AT), Hungary (HU), France (FR), …). This improves tool routing
-  accuracy when the user asks in plain language rather than ENTSO-E document codes.
+- **Natural language trigger phrases**: all 22 tool descriptions (21
+  data-fetching tools + `area_eic`) now lead with a human-phrasing sentence
+  covering synonyms users actually speak — e.g. *"power prices, spot prices,
+  SDAC prices, EPEX prices"* for `energy_prices`; *"total load, power demand,
+  electricity consumption"* for `load`; *"fuel mix, renewable generation, wind
+  power output"* for `gen_time_series` — plus explicit country/zone examples
+  (Germany (DE-LU), Austria (AT), Hungary (HU), France (FR), …). This improves
+  tool routing accuracy when the user asks in plain language rather than ENTSO-E
+  document codes.
 
 - **Anti-hallucination instruction**: every data-fetching tool description now
   contains *"Returns actual ENTSO-E data — do NOT generate synthetic
-  [prices/load/generation/…] when this tool is available."* This directly prevents
-  the LLM from substituting synthetic values when a live data tool is reachable.
+  [prices/load/generation/…] when this tool is available."* This directly
+  prevents the LLM from substituting synthetic values when a live data tool is
+  reachable.
 
 - **Balancing terminology**: `contracted_reserves` description now names FCR,
-  aFRR, mFRR, and RR by their full names alongside the ENTSO-E process type codes,
-  eliminating a routing gap for users who ask about frequency reserves by acronym.
+  aFRR, mFRR, and RR by their full names alongside the ENTSO-E process type
+  codes, eliminating a routing gap for users who ask about frequency reserves by
+  acronym.
 
 - **Third-country specifics**: `allocated_transfer_capacities_3rd_countries` now
   lists example third countries (Ukraine, Serbia, Norway, Switzerland) for
@@ -138,8 +167,8 @@ editor_options:
 
 ## Compatibility
 
-- No tool signatures, return types, argument names, or runtime dependencies change.
-  Tool count stays at 29.
+- No tool signatures, return types, argument names, or runtime dependencies
+  change. Tool count stays at 29.
 
 # entsoeapi.mcp 0.3.1
 

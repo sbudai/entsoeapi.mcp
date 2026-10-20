@@ -5,9 +5,9 @@
 
 <!-- badges: start -->
 
-![Tests](https://img.shields.io/badge/tests-121%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-133%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)
-![Tools](https://img.shields.io/badge/tools-29-blue)
+![Tools](https://img.shields.io/badge/tools-30-blue)
 ![R](https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
@@ -38,7 +38,8 @@ without flooding its context window.
 > *“Which generation units in Belgium had unplanned outages this
 > week?”*  
 > *“What is the installed solar capacity in the Netherlands in 2024?”*  
-> *“Get the net transfer capacity from Germany to Poland for today.”*
+> *“Get the net transfer capacity from Germany to Poland for today.”*  
+> *“How much did Belgium spend on redispatching each month in 2025?”*
 
 ------------------------------------------------------------------------
 
@@ -120,9 +121,9 @@ bidding zones and control areas.
 
 ------------------------------------------------------------------------
 
-## Available tools (29)
+## Available tools (30)
 
-The 21 time-series tools return a compact envelope pointing at a cached
+The 22 time-series tools return a compact envelope pointing at a cached
 DuckDB table (`{table, rows, schema, preview, SQL hint}`). Use
 `sql_query` to aggregate or join. EIC lookup tools and `get_news` return
 CSV directly. All date parameters use **CET timezone** and **YYYY-MM-DD
@@ -158,7 +159,7 @@ One tool (`gen_time_series`) with a `type` parameter:
 | `type` value | ENTSO-E dataset | Description |
 |----|----|----|
 | `actual` *(default)* | 16.1.B&C | Actual generation per production type |
-| `wind_solar` | 14.1.D | Day-ahead wind and solar forecast |
+| `wind_solar` | 14.1.D | Wind and solar forecast; `process_type` `A01` day-ahead *(default)*, `A40` intraday, `A18` current |
 | `day_ahead` | 14.1.C | Day-ahead aggregated generation forecast |
 | `per_unit` | 16.1.A | Actual generation per generation unit *(slow)* |
 | `storage` | 16.1.D | Hydro reservoir / water storage filling rate |
@@ -193,6 +194,17 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 | `total_commercial_sched` | 12.1.F | Total commercial schedules |
 | `net_positions` | 12.1.H | Net positions |
 | `forecasted_transfer_capacities` | 11.1 | Forecasted transfer capacities |
+
+### Congestion management
+
+One tool (`congestion_management`) with a `type` parameter:
+
+| `type` value | ENTSO-E dataset | Description |
+|----|----|----|
+| `redispatching_internal` *(default)* | 13.1.A | Internal redispatching in a control area (`eic`) |
+| `redispatching_cross_border` | 13.1.A | Cross-border redispatching (`eic_in`, `eic_out`; direction matters) |
+| `countertrading` | 13.1.B | Countertrading on a border (`eic_in`, `eic_out`) |
+| `costs` | 13.1.C | Monthly costs of redispatching, countertrading and other congestion management (`eic`, optional `event_nature`) |
 
 ### Outages
 
@@ -398,7 +410,7 @@ non-root `mcp` user. Override the R version with
 
 ## Testing
 
-The package ships with **121 unit tests** that exercise every tool
+The package ships with **133 unit tests** that exercise every tool
 wrapper, every dispatch branch, and every utility — yielding **99% line
 coverage** across `R/run.R`, `R/tools.R`, and `R/utils.R`.
 
@@ -435,16 +447,16 @@ the Transparency Platform.
     ├── RELEASE_CHECKLIST     # What to check during launching a new version
     ├── R/
     |   ├── run.R             # Entry point: run() → mcp_server(tools = all_tools()), server instructions
-    |   ├── tools.R           # All 29 ellmer::tool() definitions
+    |   ├── tools.R           # All 30 ellmer::tool() definitions
     |   ├── utils.R           # parse_date(), slim_ts(), safe_to_csv(), safe_to_cache()
     |   └── db.R              # In-memory DuckDB singleton + sql_query / list / describe helpers
     ├── tests
     |   ├── testthat.R        # Test framework helper
     |   └── testthat
     |       ├── test-run.R    # Unit tests of run.R (16 tests)
-    |       ├── test-tools.R  # Unit tests of tools.R (51 tests)
+    |       ├── test-tools.R  # Unit tests of tools.R (62 tests)
     |       ├── test-utils.R  # Unit tests of utils.R (20 tests)
-    |       └── test-db.R     # Unit tests of db.R (34 tests)
+    |       └── test-db.R     # Unit tests of db.R (35 tests)
     ├── inst
     |   └── skills
     |       └── entsoe-market-data

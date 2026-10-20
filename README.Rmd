@@ -58,7 +58,8 @@ Large time-series results are cached in an in-process **DuckDB** inside the cont
 > *"Show me day-ahead prices for France and Germany last Monday."*\
 > *"Which generation units in Belgium had unplanned outages this week?"*\
 > *"What is the installed solar capacity in the Netherlands in 2024?"*\
-> *"Get the net transfer capacity from Germany to Poland for today."*
+> *"Get the net transfer capacity from Germany to Poland for today."*\
+> *"How much did Belgium spend on redispatching each month in 2025?"*
 
 ------------------------------------------------------------------------
 
@@ -132,7 +133,7 @@ Claude should call the `area_eic` tool and return a list of German bidding zones
 
 ## Available tools (`r n_tools`)
 
-The 21 time-series tools return a compact envelope pointing at a cached DuckDB table (`{table, rows, schema, preview, SQL hint}`). Use `sql_query` to aggregate or join. EIC lookup tools and `get_news` return CSV directly. All date parameters use **CET timezone** and **YYYY-MM-DD format**.
+The 22 time-series tools return a compact envelope pointing at a cached DuckDB table (`{table, rows, schema, preview, SQL hint}`). Use `sql_query` to aggregate or join. EIC lookup tools and `get_news` return CSV directly. All date parameters use **CET timezone** and **YYYY-MM-DD format**.
 
 ### EIC lookup
 
@@ -164,7 +165,7 @@ One tool (`gen_time_series`) with a `type` parameter:
 | `type` value | ENTSO-E dataset | Description |
 |----|----|----|
 | `actual` *(default)* | 16.1.B&C | Actual generation per production type |
-| `wind_solar` | 14.1.D | Day-ahead wind and solar forecast |
+| `wind_solar` | 14.1.D | Wind and solar forecast; `process_type` `A01` day-ahead *(default)*, `A40` intraday, `A18` current |
 | `day_ahead` | 14.1.C | Day-ahead aggregated generation forecast |
 | `per_unit` | 16.1.A | Actual generation per generation unit *(slow)* |
 | `storage` | 16.1.D | Hydro reservoir / water storage filling rate |
@@ -199,6 +200,17 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 | `total_commercial_sched` | 12.1.F | Total commercial schedules |
 | `net_positions` | 12.1.H | Net positions |
 | `forecasted_transfer_capacities` | 11.1 | Forecasted transfer capacities |
+
+### Congestion management
+
+One tool (`congestion_management`) with a `type` parameter:
+
+| `type` value | ENTSO-E dataset | Description |
+|----|----|----|
+| `redispatching_internal` *(default)* | 13.1.A | Internal redispatching in a control area (`eic`) |
+| `redispatching_cross_border` | 13.1.A | Cross-border redispatching (`eic_in`, `eic_out`; direction matters) |
+| `countertrading` | 13.1.B | Countertrading on a border (`eic_in`, `eic_out`) |
+| `costs` | 13.1.C | Monthly costs of redispatching, countertrading and other congestion management (`eic`, optional `event_nature`) |
 
 ### Outages
 

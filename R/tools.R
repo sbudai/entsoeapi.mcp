@@ -75,6 +75,8 @@
 #' @importFrom entsoeapi outages_gen_units outages_prod_units
 #' @importFrom entsoeapi outages_transmission_grid
 #' @importFrom entsoeapi imbalance_prices imbalance_volumes contracted_reserves
+#' @importFrom entsoeapi redispatching_internal redispatching_cross_border
+#' @importFrom entsoeapi countertrading costs_of_congestion_management
 tool_area_eic <- tool(
   name = "area_eic",
   fun = \(query = NULL) {
@@ -285,7 +287,10 @@ tool_load <- tool(
 
 tool_gen_time_series <- tool(
   name = "gen_time_series",
-  fun = \(eic, period_start, period_end, type = "actual", gen_type = NULL) {
+  fun = \(
+    eic, period_start, period_end, type = "actual", gen_type = NULL,
+    process_type = "A01"
+  ) {
     ps <- parse_date(period_start)
     pe <- parse_date(period_end)
     switch(
@@ -293,7 +298,9 @@ tool_gen_time_series <- tool(
       actual = gen_per_prod_type(
         eic, ps, pe, gen_type = gen_type, tidy_output = TRUE
       ),
-      wind_solar = gen_wind_solar_forecasts(eic, ps, pe, tidy_output = TRUE),
+      wind_solar = gen_wind_solar_forecasts(
+        eic, ps, pe, process_type = process_type, tidy_output = TRUE
+      ),
       day_ahead = gen_day_ahead_forecast(eic, ps, pe, tidy_output = TRUE),
       per_unit = gen_per_gen_unit(
         eic, ps, pe, gen_type = gen_type, tidy_output = TRUE
@@ -308,7 +315,8 @@ tool_gen_time_series <- tool(
         prefix = paste0("gen_", type),
         args_list = list(
           eic = eic, period_start = period_start,
-          period_end = period_end, type = type, gen_type = gen_type
+          period_end = period_end, type = type, gen_type = gen_type,
+          process_type = if (type == "wind_solar") process_type
         )
       )
   },
@@ -322,7 +330,8 @@ tool_gen_time_series <- tool(
     "values. Prefer 1-3 day date ranges",
     "- 15-min data fills the 100-row cap in ~1 day; hourly data allows ~4",
     "days. Max 1-year API limit. type: 'actual' (16.1.B&C per production type,",
-    "default), 'wind_solar' (14.1.D forecast), 'day_ahead' (14.1.C aggregate",
+    "default), 'wind_solar' (14.1.D wind and solar forecast; see",
+    "process_type), 'day_ahead' (14.1.C aggregate",
     "forecast), 'per_unit' (16.1.A per unit; one API request per day, sent",
     "in parallel, so keep ranges short), 'storage' (16.1.D hydro",
     "reservoir filling rate). gen_type: optional ENTSO-E production type code",
@@ -349,6 +358,13 @@ tool_gen_time_series <- tool(
       description = paste(
         "Optional ENTSO-E production type code, e.g. 'B01' Biomass, 'B16'",
         "Solar. Used with 'actual' and 'per_unit'."
+      ),
+      required = FALSE
+    ),
+    process_type = type_string(
+      description = paste(
+        "Only with 'wind_solar': 'A01' day-ahead forecast (default), 'A40'",
+        "intraday forecast, 'A18' current (latest intraday) forecast."
       ),
       required = FALSE
     )
@@ -766,6 +782,114 @@ tool_congestion_income <- tool(
     ),
     contract_type = type_string(
       description = "Contract type, default 'A01' (Day ahead).",
+      required = FALSE
+    )
+  )
+)
+
+
+# ============================================================
+# Congestion Management Tools
+# ============================================================
+
+tool_congestion_management <- tool(
+  name = "congestion_management",
+  fun = \(
+    eic = NULL, period_start, period_end, type = "redispatching_internal",
+    eic_in = NULL, eic_out = NULL, event_nature = NULL
+  ) {
+    ps <- parse_date(period_start)
+    pe <- parse_date(period_end)
+    switch(
+      type,
+      redispatching_internal = redispatching_internal(
+        eic, ps, pe, tidy_output = TRUE
+      ),
+      redispatching_cross_border = redispatching_cross_border(
+        eic_in, eic_out, ps, pe, tidy_output = TRUE
+      ),
+      countertrading = countertrading(
+        eic_in, eic_out, ps, pe, tidy_output = TRUE
+      ),
+      costs = costs_of_congestion_management(
+        eic, ps, pe, event_nature = event_nature, tidy_output = TRUE
+      ),
+      stop(
+        "Unknown type '", type, "'. Use: redispatching_internal,",
+        " redispatching_cross_border, countertrading, costs"
+      )
+    ) |>
+      safe_to_cache(
+        prefix = paste0("congestion_", type),
+        args_list = list(
+          eic = eic, eic_in = eic_in, eic_out = eic_out,
+          period_start = period_start, period_end = period_end,
+          type = type, event_nature = event_nature
+        )
+      )
+  },
+  description = paste(
+    "Get real congestion management data: remedial actions a TSO took to",
+    "relieve congested grid lines. Use for requests about redispatching",
+    "(redispatch volumes, up/down regulation of generation or load),",
+    "countertrading, or the costs of congestion management / redispatch.",
+    "Returns actual ENTSO-E data - do NOT generate synthetic values.",
+    "type: 'redispatching_internal' (13.1.A internal, default; needs eic of a",
+    "control area, MWh per 15-min point with ts_flow_direction_def UP/DOWN,",
+    "ts_mkt_psr_type_def Generation/Load and ts_reason_text),",
+    "'redispatching_cross_border' (13.1.A cross-border; needs eic_in and",
+    "eic_out, the direction matters - try both), 'countertrading' (13.1.B;",
+    "needs eic_in and eic_out, MW in ts_point_quantity), 'costs' (13.1.C",
+    "monthly amounts in ts_point_congestion_cost_price_amount, currency in",
+    "ts_currency_unit_name (EUR, HUF, ...), one series per",
+    "ts_business_type_def: 'System Operator redispatching', 'Counter trade',",
+    "'Congestion costs' (the total of the other two, do not add it to",
+    "them); needs eic; ranges up to 1 year are fine).",
+    "Prefer 1-3 day ranges for the 15-min types. A result with reason_code",
+    "999 means ENTSO-E has no data for that area/border and period."
+  ),
+  arguments = list(
+    eic = type_string(
+      description = paste(
+        "EIC code of the control area, e.g. '10YDE-EON------1' for TenneT DE",
+        "or '10YNL----------L' for the Netherlands. Used with",
+        "'redispatching_internal' and 'costs'."
+      ),
+      required = FALSE
+    ),
+    period_start = type_string(
+      description = paste(
+        "Start date YYYY-MM-DD (CET). Keep to 1-3 days for the 15-min types;",
+        "use months to a year for 'costs'."
+      )
+    ),
+    period_end = type_string("End date YYYY-MM-DD (CET)."),
+    type = type_string(
+      description = paste(
+        "Series: 'redispatching_internal' (default),",
+        "'redispatching_cross_border', 'countertrading', 'costs'."
+      ),
+      required = FALSE
+    ),
+    eic_in = type_string(
+      description = paste(
+        "EIC code of the in area. Used with 'redispatching_cross_border' and",
+        "'countertrading'."
+      ),
+      required = FALSE
+    ),
+    eic_out = type_string(
+      description = paste(
+        "EIC code of the out area. Used with 'redispatching_cross_border' and",
+        "'countertrading'."
+      ),
+      required = FALSE
+    ),
+    event_nature = type_string(
+      description = paste(
+        "Only with 'costs': 'A46' System Operator redispatching, 'B03'",
+        "Counter trade, 'B04' Congestion costs. Omit for all of them."
+      ),
       required = FALSE
     )
   )
