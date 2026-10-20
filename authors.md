@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/sbudai/entsoeapi.mcp/blob/v0.6.0/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/sbudai/entsoeapi.mcp/blob/main/DESCRIPTION)
 
 Budai S (2026). *entsoeapi.mcp: Model Context Protocol (MCP) Server for
 the ENTSO-E Transparency Platform*. R package version 0.6.0,
