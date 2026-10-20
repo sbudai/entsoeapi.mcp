@@ -60,7 +60,7 @@
 
 - **Requires `entsoeapi (>= 1.3.0)`**. Version 1.3.0 parses API
   responses about 10x faster and sends the split requests of a query in
-  parallel (e.g. the day-by-day requests of
+  parallel (e.g. the day-by-day requests of
   `gen_time_series(type = "per_unit")`). Version 1.2.1 adds the
   `constraint_ts_*` columns to `flow_based_allocations` and fixes the
   A03 curve gap filling. No exported function or argument changed, so

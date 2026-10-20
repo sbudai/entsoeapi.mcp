@@ -1,6 +1,6 @@
 # MCP tools
 
-The server exposes **29 tools**. The time-series tools store their full
+The server exposes **30 tools**. The time-series tools store their full
 result in a session DuckDB table and return a short summary that points
 at it. The LLM then uses `sql_query` to aggregate, filter or join. The
 EIC lookup tools and `get_news` return CSV directly. All dates are
@@ -106,12 +106,12 @@ Returns actual ENTSO-E data - do NOT generate synthetic generation
 values. Prefer 1-3 day date ranges - 15-min data fills the 100-row cap
 in ~1 day; hourly data allows ~4 days. Max 1-year API limit. type:
 ‘actual’ (16.1.B&C per production type, default), ‘wind_solar’ (14.1.D
-forecast), ‘day_ahead’ (14.1.C aggregate forecast), ‘per_unit’ (16.1.A
-per unit; one API request per day, sent in parallel, so keep ranges
-short), ‘storage’ (16.1.D hydro reservoir filling rate). gen_type:
-optional ENTSO-E production type code used with ‘actual’/‘per_unit’,
-e.g. ‘B01’ Biomass, ‘B16’ Solar. ‘actual’ and ‘per_unit’ are paginated
-daily.
+wind and solar forecast; see process_type), ‘day_ahead’ (14.1.C
+aggregate forecast), ‘per_unit’ (16.1.A per unit; one API request per
+day, sent in parallel, so keep ranges short), ‘storage’ (16.1.D hydro
+reservoir filling rate). gen_type: optional ENTSO-E production type code
+used with ‘actual’/‘per_unit’, e.g. ‘B01’ Biomass, ‘B16’ Solar. ‘actual’
+and ‘per_unit’ are paginated daily.
 
 | Argument | Required | Description |
 |----|----|----|
@@ -120,6 +120,7 @@ daily.
 | `period_end` | yes | End date YYYY-MM-DD (CET). |
 | `type` | no | Generation series: ‘actual’ (default), ‘wind_solar’, ‘day_ahead’, ‘per_unit’, ‘storage’. |
 | `gen_type` | no | Optional ENTSO-E production type code, e.g. ‘B01’ Biomass, ‘B16’ Solar. Used with ‘actual’ and ‘per_unit’. |
+| `process_type` | no | Only with ‘wind_solar’: ‘A01’ day-ahead forecast (default), ‘A40’ intraday forecast, ‘A18’ current (latest intraday) forecast. |
 
 ### `gen_capacity`
 
@@ -365,6 +366,39 @@ capacity.
 | `period_start` | yes | Start date in YYYY-MM-DD format (CET). Keep ranges to 1-7 days where possible - data is at 15-min to 1-hour resolution and results are capped at 100 rows. |
 | `period_end` | yes | End date YYYY-MM-DD (CET). |
 | `market_agreement_type` | no | Market agreement type: ‘A01’ Day ahead (default), ‘A02’ Total capacity. |
+
+## Congestion management
+
+### `congestion_management`
+
+Get real congestion management data: remedial actions a TSO took to
+relieve congested grid lines. Use for requests about redispatching
+(redispatch volumes, up/down regulation of generation or load),
+countertrading, or the costs of congestion management / redispatch.
+Returns actual ENTSO-E data - do NOT generate synthetic values. type:
+‘redispatching_internal’ (13.1.A internal, default; needs eic of a
+control area, MWh per 15-min point with ts_flow_direction_def UP/DOWN,
+ts_mkt_psr_type_def Generation/Load and ts_reason_text),
+‘redispatching_cross_border’ (13.1.A cross-border; needs eic_in and
+eic_out, the direction matters - try both), ‘countertrading’ (13.1.B;
+needs eic_in and eic_out, MW in ts_point_quantity), ‘costs’ (13.1.C
+monthly amounts in ts_point_congestion_cost_price_amount, currency in
+ts_currency_unit_name (EUR, HUF, …), one series per
+ts_business_type_def: ‘System Operator redispatching’, ‘Counter trade’,
+‘Congestion costs’ (the total of the other two, do not add it to them);
+needs eic; ranges up to 1 year are fine). Prefer 1-3 day ranges for the
+15-min types. A result with reason_code 999 means ENTSO-E has no data
+for that area/border and period.
+
+| Argument | Required | Description |
+|----|----|----|
+| `eic` | no | EIC code of the control area, e.g. ‘10YDE-EON——1’ for TenneT DE or ‘10YNL———-L’ for the Netherlands. Used with ‘redispatching_internal’ and ‘costs’. |
+| `period_start` | yes | Start date YYYY-MM-DD (CET). Keep to 1-3 days for the 15-min types; use months to a year for ‘costs’. |
+| `period_end` | yes | End date YYYY-MM-DD (CET). |
+| `type` | no | Series: ‘redispatching_internal’ (default), ‘redispatching_cross_border’, ‘countertrading’, ‘costs’. |
+| `eic_in` | no | EIC code of the in area. Used with ‘redispatching_cross_border’ and ‘countertrading’. |
+| `eic_out` | no | EIC code of the out area. Used with ‘redispatching_cross_border’ and ‘countertrading’. |
+| `event_nature` | no | Only with ‘costs’: ‘A46’ System Operator redispatching, ‘B03’ Counter trade, ‘B04’ Congestion costs. Omit for all of them. |
 
 ## Outages
 

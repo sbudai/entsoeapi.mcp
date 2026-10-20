@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">entsoeapi.mcp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@
 <div class="page-header"><h1 id="entsoeapimcp">entsoeapi.mcp<a class="anchor" aria-label="anchor" href="#entsoeapimcp"></a>
 </h1></div>
 <!-- badges: start -->
-<p><img src="https://img.shields.io/badge/tests-121%20passing-brightgreen" alt="Tests"><img src="https://img.shields.io/badge/coverage-99%25-brightgreen" alt="Coverage"><img src="https://img.shields.io/badge/tools-29-blue" alt="Tools"><img src="https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue" alt="R"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></p>
+<p><img src="https://img.shields.io/badge/tests-133%20passing-brightgreen" alt="Tests"><img src="https://img.shields.io/badge/coverage-99%25-brightgreen" alt="Coverage"><img src="https://img.shields.io/badge/tools-30-blue" alt="Tools"><img src="https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue" alt="R"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></p>
 <!-- badges: end -->
 <p>An <a href="https://modelcontextprotocol.io" class="external-link">MCP</a> server that exposes the <a href="https://transparency.entsoe.eu" class="external-link">ENTSO-E Transparency Platform</a> as tools for LLM-enabled applications such as Claude Desktop. Query European electricity market, load, generation, transmission, outages, and balancing data through natural language.</p>
 <p>Built in pure R on top of <a href="https://github.com/krose/entsoeapi" class="external-link"><code>entsoeapi</code></a> and <a href="https://github.com/posit-dev/mcptools" class="external-link"><code>mcptools</code></a>. Distributed as a Docker image — no R installation required for end users.</p>
@@ -61,7 +61,7 @@
 <h2 id="what-you-can-ask">What you can ask<a class="anchor" aria-label="anchor" href="#what-you-can-ask"></a>
 </h2>
 <blockquote>
-<p><em>“What was the actual electricity load in Germany on 3 January 2025?”</em><br><em>“Show me day-ahead prices for France and Germany last Monday.”</em><br><em>“Which generation units in Belgium had unplanned outages this week?”</em><br><em>“What is the installed solar capacity in the Netherlands in 2024?”</em><br><em>“Get the net transfer capacity from Germany to Poland for today.”</em></p>
+<p><em>“What was the actual electricity load in Germany on 3 January 2025?”</em><br><em>“Show me day-ahead prices for France and Germany last Monday.”</em><br><em>“Which generation units in Belgium had unplanned outages this week?”</em><br><em>“What is the installed solar capacity in the Netherlands in 2024?”</em><br><em>“Get the net transfer capacity from Germany to Poland for today.”</em><br><em>“How much did Belgium spend on redispatching each month in 2025?”</em></p>
 </blockquote>
 <hr>
 </div>
@@ -169,9 +169,9 @@
 </div>
 </div>
 <div class="section level2">
-<h2 id="available-tools-29">Available tools (29)<a class="anchor" aria-label="anchor" href="#available-tools-29"></a>
+<h2 id="available-tools-30">Available tools (30)<a class="anchor" aria-label="anchor" href="#available-tools-30"></a>
 </h2>
-<p>The 21 time-series tools return a compact envelope pointing at a cached DuckDB table (<code>{table, rows, schema, preview, SQL hint}</code>). Use <code>sql_query</code> to aggregate or join. EIC lookup tools and <code>get_news</code> return CSV directly. All date parameters use <strong>CET timezone</strong> and <strong>YYYY-MM-DD format</strong>.</p>
+<p>The 22 time-series tools return a compact envelope pointing at a cached DuckDB table (<code>{table, rows, schema, preview, SQL hint}</code>). Use <code>sql_query</code> to aggregate or join. EIC lookup tools and <code>get_news</code> return CSV directly. All date parameters use <strong>CET timezone</strong> and <strong>YYYY-MM-DD format</strong>.</p>
 <div class="section level3">
 <h3 id="eic-lookup">EIC lookup<a class="anchor" aria-label="anchor" href="#eic-lookup"></a>
 </h3>
@@ -287,7 +287,7 @@
 <tr>
 <td><code>wind_solar</code></td>
 <td>14.1.D</td>
-<td>Day-ahead wind and solar forecast</td>
+<td>Wind and solar forecast; <code>process_type</code> <code>A01</code> day-ahead <em>(default)</em>, <code>A40</code> intraday, <code>A18</code> current</td>
 </tr>
 <tr>
 <td><code>day_ahead</code></td>
@@ -432,6 +432,48 @@
 <td><code>forecasted_transfer_capacities</code></td>
 <td>11.1</td>
 <td>Forecasted transfer capacities</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="congestion-management">Congestion management<a class="anchor" aria-label="anchor" href="#congestion-management"></a>
+</h3>
+<p>One tool (<code>congestion_management</code>) with a <code>type</code> parameter:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>
+<code>type</code> value</th>
+<th>ENTSO-E dataset</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+<code>redispatching_internal</code> <em>(default)</em>
+</td>
+<td>13.1.A</td>
+<td>Internal redispatching in a control area (<code>eic</code>)</td>
+</tr>
+<tr>
+<td><code>redispatching_cross_border</code></td>
+<td>13.1.A</td>
+<td>Cross-border redispatching (<code>eic_in</code>, <code>eic_out</code>; direction matters)</td>
+</tr>
+<tr>
+<td><code>countertrading</code></td>
+<td>13.1.B</td>
+<td>Countertrading on a border (<code>eic_in</code>, <code>eic_out</code>)</td>
+</tr>
+<tr>
+<td><code>costs</code></td>
+<td>13.1.C</td>
+<td>Monthly costs of redispatching, countertrading and other congestion management (<code>eic</code>, optional <code>event_nature</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -652,7 +694,7 @@
 <div class="section level2">
 <h2 id="testing">Testing<a class="anchor" aria-label="anchor" href="#testing"></a>
 </h2>
-<p>The package ships with <strong>121 unit tests</strong> that exercise every tool wrapper, every dispatch branch, and every utility — yielding <strong>99% line coverage</strong> across <code>R/run.R</code>, <code>R/tools.R</code>, and <code>R/utils.R</code>.</p>
+<p>The package ships with <strong>133 unit tests</strong> that exercise every tool wrapper, every dispatch branch, and every utility — yielding <strong>99% line coverage</strong> across <code>R/run.R</code>, <code>R/tools.R</code>, and <code>R/utils.R</code>.</p>
 <p>Run the suite locally:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plain run (fast)</span></span>
@@ -678,16 +720,16 @@
 <span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>├── RELEASE_CHECKLIST     <span class="co"># What to check during launching a new version</span></span>
 <span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>├── R<span class="sc">/</span></span>
 <span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="er">|</span>   ├── run.R             <span class="co"># Entry point: run() → mcp_server(tools = all_tools()), server instructions</span></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="sc">|</span>   ├── tools.R           <span class="co"># All 29 ellmer::tool() definitions</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="sc">|</span>   ├── tools.R           <span class="co"># All 30 ellmer::tool() definitions</span></span>
 <span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="sc">|</span>   ├── utils.R           <span class="co"># parse_date(), slim_ts(), safe_to_csv(), safe_to_cache()</span></span>
 <span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="sc">|</span>   └── db.R              <span class="co"># In-memory DuckDB singleton + sql_query / list / describe helpers</span></span>
 <span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>├── tests</span>
 <span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="sc">|</span>   ├── testthat.R        <span class="co"># Test framework helper</span></span>
 <span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="sc">|</span>   └── testthat</span>
 <span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>run.R    <span class="co"># Unit tests of run.R (16 tests)</span></span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>tools.R  <span class="co"># Unit tests of tools.R (51 tests)</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>tools.R  <span class="co"># Unit tests of tools.R (62 tests)</span></span>
 <span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>utils.R  <span class="co"># Unit tests of utils.R (20 tests)</span></span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="sc">|</span>       └── test<span class="sc">-</span>db.R     <span class="co"># Unit tests of db.R (34 tests)</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="sc">|</span>       └── test<span class="sc">-</span>db.R     <span class="co"># Unit tests of db.R (35 tests)</span></span>
 <span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>├── inst</span>
 <span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="sc">|</span>   └── skills</span>
 <span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="sc">|</span>       └── entsoe<span class="sc">-</span>market<span class="sc">-</span>data</span>
