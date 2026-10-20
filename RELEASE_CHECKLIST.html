@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">entsoeapi.mcp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,7 +30,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Release Checklist — entsoeapi.mcp</h1>
-      <small class="dont-index">Source: <a href="https://github.com/sbudai/entsoeapi.mcp/blob/main/RELEASE_CHECKLIST.md" class="external-link"><code>RELEASE_CHECKLIST.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/sbudai/entsoeapi.mcp/blob/v0.6.1/RELEASE_CHECKLIST.md" class="external-link"><code>RELEASE_CHECKLIST.md</code></a></small>
     </div>
 
 <div id="release-checklist--entsoeapimcp" class="section level1">
@@ -70,8 +70,6 @@
 <ul class="task-list"><li><label><input type="checkbox"><code>docker build -t sbudai/entsoeapi.mcp:latest -t sbudai/entsoeapi.mcp:vX.Y.Z .</code> — builds without errors</label></li>
 <li><label><input type="checkbox">Smoke-test the image responds to an MCP <code>initialize</code> request using CLI:<br><code>(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}'; sleep 10) | docker run --rm -i -e ENTSOE_PAT=test sbudai/entsoeapi.mcp:latest</code><br>
 — expect one JSON line with <code>"result"</code>; the <code>sleep</code> keeps stdin open, since the server exits on EOF before answering</label></li>
-<li><label><input type="checkbox">Smoke-test the image lists every tool in reply to an MCP <code>tools/list</code> request, i.e. each tool serializes to MCP JSON:<br><code>(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}' '{"jsonrpc":"2.0","method":"notifications/initialized"}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'; sleep 10) | docker run --rm -i -e ENTSOE_PAT=test sbudai/entsoeapi.mcp:latest | jq -c 'select(.id == 2) | .result.tools | map(.name) | {listed: length, unique: (unique | length)}'</code><br>
-— expect <code>listed</code> and <code>unique</code> both equal to the number of tools in the package:<br><code>docker run --rm sbudai/entsoeapi.mcp:latest Rscript -e 'cat(length(entsoeapi.mcp:::all_tools()), "\n")'</code></label></li>
 <li><label><input type="checkbox">Exercise at least one live tool call end-to-end from Claude Desktop against the new image with a real <code>ENTSOE_PAT</code></label></li>
 <li><label><input type="checkbox">Image size is reasonable (check with <code>docker images sbudai/entsoeapi.mcp</code>)</label></li>
 <li><label><input type="checkbox">Image runs as non-root <code>mcp</code> user (<code>docker run --rm sbudai/entsoeapi.mcp:latest id</code>)</label></li>
@@ -84,11 +82,11 @@
 </ul></div>
 <div class="section level2">
 <h2 id="id_7-publish-docker-image">7. Publish Docker Image<a class="anchor" aria-label="anchor" href="#id_7-publish-docker-image"></a></h2>
-<p>Pushing the <code>vX.Y.Z</code> tag in section 6 triggers <code>.github/workflows/docker.yaml</code>, which builds the image, re-runs the section 5 smoke tests (MCP <code>initialize</code> and <code>tools/list</code>, non-root <code>mcp</code> user) and pushes <code>sbudai/entsoeapi.mcp:vX.Y.Z</code> and <code>:latest</code> to Docker Hub (a pre-release tag such as <code>v1.0.0-rc.1</code> does not move <code>latest</code>). The tag must match the <code>DESCRIPTION</code> version, or the workflow fails.</p>
+<p>Pushing the <code>vX.Y.Z</code> tag in section 6 triggers <code>.github/workflows/docker.yaml</code>, which builds the image, re-runs the section 5 smoke tests (MCP <code>initialize</code>, non-root <code>mcp</code> user) and pushes <code>sbudai/entsoeapi.mcp:vX.Y.Z</code> and <code>:latest</code> to Docker Hub (a pre-release tag such as <code>v1.0.0-rc.1</code> does not move <code>latest</code>). The tag must match the <code>DESCRIPTION</code> version, or the workflow fails.</p>
 <ul class="task-list"><li><label><input type="checkbox">One-time setup: repository secrets <code>DOCKERHUB_USERNAME</code> (<code>sbudai</code>) and <code>DOCKERHUB_TOKEN</code> (a Docker Hub personal access token with Read &amp; Write scope) exist under <em>Settings → Secrets and variables → Actions</em></label></li>
 <li><label><input type="checkbox">The <code>docker.yaml</code> run for the tag succeeded: <code>gh run list --workflow docker.yaml --repo sbudai/entsoeapi.mcp</code></label></li>
 <li><label><input type="checkbox">Verify both tags appear at <a href="https://hub.docker.com/r/sbudai/entsoeapi.mcp/tags" class="external-link uri">https://hub.docker.com/r/sbudai/entsoeapi.mcp/tags</a></label></li>
-<li><label><input type="checkbox"><code>docker pull sbudai/entsoeapi.mcp:latest</code> from a clean host and re-run the smoke tests</label></li>
+<li><label><input type="checkbox"><code>docker pull sbudai/entsoeapi.mcp:latest</code> from a clean host and re-run the smoke test</label></li>
 </ul><p>To (re)publish an existing tag, e.g. one released before the workflow existed, run the workflow by hand; set <code>latest=false</code> when the tag is not the newest release:<br><code>gh workflow run docker.yaml --repo sbudai/entsoeapi.mcp -f tag=vX.Y.Z -f latest=true</code></p>
 <p>Fallback, if CI is unavailable — publish from the image built in section 5:</p>
 <ul class="task-list"><li><label><input type="checkbox"><code>docker login</code> to Docker Hub with the <code>sbudai</code> account</label></li>
