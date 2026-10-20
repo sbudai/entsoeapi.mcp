@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">entsoeapi.mcp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,6 +33,15 @@
       <small>Source: <a href="https://github.com/sbudai/entsoeapi.mcp/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="entsoeapimcp-050">entsoeapi.mcp 0.5.0<a class="anchor" aria-label="anchor" href="#entsoeapimcp-050"></a></h2>
+<ul><li><p><strong>Server instructions</strong>: the MCP <code>initialize</code> reply now carries real instructions for the model (resolve the EIC with <code>area_eic</code> first, fetch once, answer with <code>sql_query</code> on the cached table, handle several series and <code># error:</code> results) instead of mcptools’ generic “This provides information about a running R session.”. mcptools offers no argument for this, so <code><a href="../reference/run.html">run()</a></code> wraps its internal <code><a href="https://rdrr.io/r/base/capabilities.html" class="external-link">capabilities()</a></code>; with an mcptools version that lacks it, the server starts with the default text. <code>serverInfo</code> now reports <code>entsoeapi.mcp</code> and the package version instead of “R mcptools server”.</p></li>
+<li><p><strong>Agent skill</strong>: <code>inst/skills/entsoe-market-data/SKILL.md</code> describes the workflow, a question-to-tool map and the common pitfalls (wrong area type, several series in one table, UTC timestamps) for agents that load skills.</p></li>
+<li><p><strong>DST-safe local time in cached tables</strong>: every point timestamp column (<code>ts_point_dt_start</code>, <code>bid_ts_point_dt_start</code>) now gets a <code>_cet</code> twin holding the same instant in Central European wall-clock time (CET/CEST), computed in R. The sandboxed DuckDB cannot load the ICU extension, so <code>timezone()</code> was unavailable, and the advised fixed <code>+ INTERVAL 2 HOUR</code> shift misplaced part of every DST changeover day. The envelope gets a <code># time:</code> note, the suggested query groups by the <code>_cet</code> column, and the server instructions, SKILL.md, <code>sql_query</code> description and README say to group by it. Envelope sample rows now keep <code>00:00:00</code> on midnight values, and the multi-series WARNING lists values in sorted order.</p></li>
+<li><p><strong>One dependency fewer</strong>: <code>digest</code> is dropped. Cache table names are now hashed with <code><a href="https://rlang.r-lib.org/reference/hash.html" class="external-link">rlang::hash()</a></code>; rlang is already installed as a dependency of entsoeapi, mcptools and ellmer, so the install loses a compiled package. Table name suffixes differ from 0.4.0, which only matters within a session.</p></li>
+<li><p><strong>Multi-series detection uses the real column names</strong>: the envelope WARNING now checks <code>ts_classification_sequence_position</code>, <code>ts_mrid</code> and <code>ts_resolution</code>, the columns entsoeapi’s tidy output actually carries, so stacked day-ahead price series (e.g. a PT15M and a PT60M auction) are flagged again. The suggested query prefers <code>ts_point_dt_start</code> and a price/quantity column instead of averaging <code>ts_mrid</code>.</p></li>
+<li><p><strong>Descriptions and README use real column names</strong>: <code>energy_prices</code>, <code>intraday_prices</code> and the <code>sql_query</code> example refer to <code>ts_classification_sequence_position</code>, <code>ts_point_dt_start</code> and <code>ts_point_quantity</code> instead of the non-existent <code>sequence</code>, <code>dt_start</code> and <code>value</code> columns. The README example envelope and workflow come from real ENTSO-E responses.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="entsoeapimcp-040">entsoeapi.mcp 0.4.0<a class="anchor" aria-label="anchor" href="#entsoeapimcp-040"></a></h2>
 <div class="section level3">

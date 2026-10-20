@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">entsoeapi.mcp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@
 <div class="page-header"><h1 id="entsoeapimcp">entsoeapi.mcp<a class="anchor" aria-label="anchor" href="#entsoeapimcp"></a>
 </h1></div>
 <!-- badges: start -->
-<p><img src="https://img.shields.io/badge/tests-110%20passing-brightgreen" alt="Tests"><img src="https://img.shields.io/badge/coverage-99%25-brightgreen" alt="Coverage"><img src="https://img.shields.io/badge/tools-29-blue" alt="Tools"><img src="https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue" alt="R"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></p>
+<p><img src="https://img.shields.io/badge/tests-121%20passing-brightgreen" alt="Tests"><img src="https://img.shields.io/badge/coverage-99%25-brightgreen" alt="Coverage"><img src="https://img.shields.io/badge/tools-29-blue" alt="Tools"><img src="https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue" alt="R"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></p>
 <!-- badges: end -->
 <p>An <a href="https://modelcontextprotocol.io" class="external-link">MCP</a> server that exposes the <a href="https://transparency.entsoe.eu" class="external-link">ENTSO-E Transparency Platform</a> as tools for LLM-enabled applications such as Claude Desktop. Query European electricity market, load, generation, transmission, outages, and balancing data through natural language.</p>
 <p>Built in pure R on top of <a href="https://github.com/krose/entsoeapi" class="external-link"><code>entsoeapi</code></a> and <a href="https://github.com/posit-dev/mcptools" class="external-link"><code>mcptools</code></a>. Distributed as a Docker image — no R installation required for end users.</p>
@@ -529,30 +529,36 @@
 </tr>
 </tbody>
 </table>
-<p>Every time-series tool inserts its full result into an in-memory DuckDB table and returns an envelope. The envelope tells Claude — in every call — that statistics must be computed via <code>sql_query</code>, never from the schema sample, and warns when multiple <code>TimeSeries</code> (e.g. day-ahead Sequence 1 vs. Sequence 2) are stacked together in one cached table:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># table: energy_prices_a3f7d2</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co"># rows: 336</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co"># columns: dt_start TIMESTAMP, price DOUBLE, sequence INTEGER</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># ────────────────────────────────────────────────────────────</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co"># IMPORTANT — read before using this result:</span></span>
+<p>Every time-series tool inserts its full result into an in-memory DuckDB table and returns an envelope. The envelope tells Claude — in every call — that statistics must be computed via <code>sql_query</code>, never from the schema sample, and warns when several <code>TimeSeries</code> are stacked together in one cached table. This is the real envelope for Austrian day-ahead prices on 12 October 2026: one day of 15-minute prices, but 288 rows, because the document holds classification sequence 2, sequence 1, and sequence 1 again under a third <code>ts_mrid</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># table: energy_prices_2c603b</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co"># rows: 288</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co"># columns: ts_in_domain_name VARCHAR, ts_out_domain_name VARCHAR, type VARCHAR, type_def VARCHAR, market_agreement_type VARCHAR, market_agreement_type_def VARCHAR, ts_auction_type VARCHAR, ts_auction_type_def VARCHAR, ts_business_type VARCHAR, ts_business_type_def VARCHAR, ts_time_interval_start TIMESTAMP, ts_time_interval_end TIMESTAMP, ts_mrid DOUBLE, ts_point_dt_start TIMESTAMP, ts_point_dt_start_cet TIMESTAMP, ts_point_price_amount DOUBLE, ts_currency_unit_name VARCHAR, ts_price_measure_unit_name VARCHAR, ts_classification_sequence_position DOUBLE</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># ------------------------------------------------------------</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co"># IMPORTANT - read before using this result:</span></span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#   This is a CACHED TABLE, not a result set. The rows below</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#   are a SCHEMA SAMPLE only — they are NOT representative of</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#   are a SCHEMA SAMPLE only - they are NOT representative of</span></span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#   the data, may omit other series, and MUST NOT be used for</span></span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#   any analysis. NEVER compute averages, totals, min/max,</span></span>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#   counts, or any statistic from this sample.</span></span>
 <span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#   ALWAYS call sql_query(...) against the table named above</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#   for ANY aggregation, filter, statistic, or join.</span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co"># ────────────────────────────────────────────────────────────</span></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co"># </span><span class="al">WARNING</span><span class="co">: multiple series present in this table:</span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#   sequence: 1, 2     (filter explicitly; do not assume one)</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co"># schema sample (5 of 336 rows; do not use for analysis):</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>dt_start,price,sequence</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="dv">2024-01-01</span> <span class="dv">00</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">42.5</span>,<span class="dv">1</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="dv">2024-01-01</span> <span class="dv">01</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">41.2</span>,<span class="dv">1</span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="dv">2024-01-01</span> <span class="dv">02</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">40.8</span>,<span class="dv">1</span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="dv">2024-01-01</span> <span class="dv">03</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">40.1</span>,<span class="dv">1</span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="dv">2024-01-01</span> <span class="dv">04</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">39.7</span>,<span class="dv">1</span></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co"># suggested query: SELECT date_trunc('week', dt_start) AS wk, AVG(price) FROM energy_prices_a3f7d2 GROUP BY 1 ORDER BY 1</span></span></code></pre></div>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co"># ------------------------------------------------------------</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co"># time: ts_point_dt_start is UTC; ts_point_dt_start_cet is the same</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#   instant in Central European wall-clock time (CET/CEST, DST</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#   handled). Group by it for local days and hours; do not shift</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#   by a fixed INTERVAL.</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co"># </span><span class="al">WARNING</span><span class="co">: multiple series present in this table:</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#   ts_classification_sequence_position: 1, 2     (filter explicitly; do not assume one)</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#   ts_mrid: 1, 2, 3     (filter explicitly; do not assume one)</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co"># schema sample (5 of 288 rows; do not use for analysis):</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="st">"ts_in_domain_name"</span>,<span class="st">"ts_out_domain_name"</span>,<span class="st">"type"</span>,<span class="st">"type_def"</span>,<span class="st">"market_agreement_type"</span>,<span class="st">"market_agreement_type_def"</span>,<span class="st">"ts_auction_type"</span>,<span class="st">"ts_auction_type_def"</span>,<span class="st">"ts_business_type"</span>,<span class="st">"ts_business_type_def"</span>,<span class="st">"ts_time_interval_start"</span>,<span class="st">"ts_time_interval_end"</span>,<span class="st">"ts_mrid"</span>,<span class="st">"ts_point_dt_start"</span>,<span class="st">"ts_point_dt_start_cet"</span>,<span class="st">"ts_point_price_amount"</span>,<span class="st">"ts_currency_unit_name"</span>,<span class="st">"ts_price_measure_unit_name"</span>,<span class="st">"ts_classification_sequence_position"</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="st">"Austria"</span>,<span class="st">"Austria"</span>,<span class="st">"A44"</span>,<span class="st">"Price Document"</span>,<span class="st">"A01"</span>,<span class="st">"Daily contract"</span>,<span class="st">"A01"</span>,<span class="st">"Implicit"</span>,<span class="st">"A62"</span>,<span class="st">"Spot price"</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">1</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">00</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">195.36</span>,<span class="st">"EUR"</span>,<span class="st">"MWH"</span>,<span class="dv">2</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="st">"Austria"</span>,<span class="st">"Austria"</span>,<span class="st">"A44"</span>,<span class="st">"Price Document"</span>,<span class="st">"A01"</span>,<span class="st">"Daily contract"</span>,<span class="st">"A01"</span>,<span class="st">"Implicit"</span>,<span class="st">"A62"</span>,<span class="st">"Spot price"</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">1</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">15</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">00</span><span class="sc">:</span><span class="dv">15</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">190.12</span>,<span class="st">"EUR"</span>,<span class="st">"MWH"</span>,<span class="dv">2</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="st">"Austria"</span>,<span class="st">"Austria"</span>,<span class="st">"A44"</span>,<span class="st">"Price Document"</span>,<span class="st">"A01"</span>,<span class="st">"Daily contract"</span>,<span class="st">"A01"</span>,<span class="st">"Implicit"</span>,<span class="st">"A62"</span>,<span class="st">"Spot price"</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">1</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">30</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">00</span><span class="sc">:</span><span class="dv">30</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">178.49</span>,<span class="st">"EUR"</span>,<span class="st">"MWH"</span>,<span class="dv">2</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="st">"Austria"</span>,<span class="st">"Austria"</span>,<span class="st">"A44"</span>,<span class="st">"Price Document"</span>,<span class="st">"A01"</span>,<span class="st">"Daily contract"</span>,<span class="st">"A01"</span>,<span class="st">"Implicit"</span>,<span class="st">"A62"</span>,<span class="st">"Spot price"</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">1</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">45</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">00</span><span class="sc">:</span><span class="dv">45</span><span class="sc">:</span><span class="dv">00</span>,<span class="fl">178.24</span>,<span class="st">"EUR"</span>,<span class="st">"MWH"</span>,<span class="dv">2</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="st">"Austria"</span>,<span class="st">"Austria"</span>,<span class="st">"A44"</span>,<span class="st">"Price Document"</span>,<span class="st">"A01"</span>,<span class="st">"Daily contract"</span>,<span class="st">"A01"</span>,<span class="st">"Implicit"</span>,<span class="st">"A62"</span>,<span class="st">"Spot price"</span>,<span class="dv">2026-10-11</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">22</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">1</span>,<span class="dv">2026-10-11</span> <span class="dv">23</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">2026-10-12</span> <span class="dv">01</span><span class="sc">:</span><span class="dv">00</span><span class="sc">:</span><span class="dv">00</span>,<span class="dv">190</span>,<span class="st">"EUR"</span>,<span class="st">"MWH"</span>,<span class="dv">2</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co"># suggested query: SELECT date_trunc('week', ts_point_dt_start_cet) AS wk, AVG(ts_point_price_amount) FROM energy_prices_2c603b GROUP BY 1 ORDER BY 1</span></span></code></pre></div>
+<p>Note that <code>ts_point_dt_start</code> is UTC (22:00 UTC is midnight in Vienna in summer), while <code>ts_point_dt_start_cet</code> holds the same instant in Central European wall-clock time, with daylight saving applied. The server computes it in R because the sandboxed DuckDB cannot load its time-zone extension, and a fixed <code>+ INTERVAL 2 HOUR</code> shift is wrong on changeover days. The sample rows show only sequence 2, so Claude would filter first, e.g. <code>WHERE ts_classification_sequence_position = 1 AND ts_mrid = 2</code>, then group by <code>ts_point_dt_start_cet</code>.</p>
 <p>The cache lives for the lifetime of one Claude Desktop session (the <code>docker run --rm -i</code> container). Identical queries within a session reuse the same table — no second API hit.</p>
 <p>The database is sandboxed: SQL cannot read or write files, reach the network, install extensions, or change settings, and its memory is capped at 1 GB (override with <code>-e ENTSOEAPI_MCP_DB_MEMORY=2GB</code>).</p>
 <p><strong>Example workflow</strong> Claude would run for <em>“Weekly average German load for January 2024”</em>:</p>
@@ -560,10 +566,10 @@
 <li>
 <code>area_eic(query = "Germany")</code> — resolve EIC code</li>
 <li>
-<code>load(eic = "10Y...", period_start = "2024-01-01", period_end = "2024-01-31")</code> — envelope with <code>table = load_actual_a3f7d2</code>
+<code>load(eic = "10Y1001A1001A83F", period_start = "2024-01-01", period_end = "2024-02-01")</code> — envelope with <code>table = load_actual_&lt;hash&gt;</code>
 </li>
 <li>
-<code>sql_query(sql = "SELECT date_trunc('week', dt_start) AS wk, AVG(value)::INT AS avg_mw FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1")</code> — 5 weekly rows instead of 744 hourly rows</li>
+<code>sql_query(sql = "SELECT date_trunc('week', ts_point_dt_start_cet) AS wk, AVG(ts_point_quantity)::INT AS avg_mw FROM load_actual_&lt;hash&gt; GROUP BY 1 ORDER BY 1")</code> — 5 weekly rows instead of 2,976 quarter-hourly rows</li>
 </ol>
 <hr>
 </div>
@@ -581,13 +587,19 @@
 <li>
 <strong>Never accept synthetic values.</strong> Every data-fetching tool explicitly instructs the LLM not to generate synthetic data when a live ENTSO-E tool is available. If Claude produces values without calling a tool, ask it to retry using the appropriate tool.</li>
 </ul>
+<p>The server also sends these rules to the client as its MCP <code>instructions</code> when a session starts, so the model sees the workflow (EIC first, fetch once, aggregate with <code>sql_query</code>) before its first tool call.</p>
+</div>
+<div class="section level2">
+<h2 id="agent-skill">Agent skill<a class="anchor" aria-label="anchor" href="#agent-skill"></a>
+</h2>
+<p><a href="inst/skills/entsoe-market-data/SKILL.html"><code>inst/skills/entsoe-market-data/SKILL.md</code></a> is an <a href="https://agentskills.io" class="external-link">Agent Skill</a> that teaches an agent when and how to use this server: picking the right EIC per dataset, reading the cache envelope, writing the <code>sql_query</code> step, and the common pitfalls (several series in one table, UTC versus local timestamps). It needs the MCP server above to be connected. To use it with Claude Code, copy the folder into <code>~/.claude/skills/</code> (or a project’s <code>.claude/skills/</code>); in Claude Desktop, upload it as a zip under <strong>Settings → Customize → Skills</strong>. In an R installation it is at <code>system.file("skills", "entsoe-market-data", package = "entsoeapi.mcp")</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="data-notes">Data notes<a class="anchor" aria-label="anchor" href="#data-notes"></a>
 </h2>
 <ul>
 <li>
-<strong>Timezone</strong>: All dates are interpreted as CET (Central European Time; UTC+1 / UTC+2 in summer) regardless of your local timezone.</li>
+<strong>Timezone</strong>: All dates are interpreted as CET (Central European Time; UTC+1 / UTC+2 in summer) regardless of your local timezone. Cached tables keep point timestamps in UTC (<code>ts_point_dt_start</code>) and add a Central European wall-clock copy (<code>ts_point_dt_start_cet</code>) for grouping by local day or hour.</li>
 <li>
 <strong>Resolution</strong>: Load and generation data is typically at 15-minute or 1-hour intervals</li>
 <li>
@@ -640,7 +652,7 @@
 <div class="section level2">
 <h2 id="testing">Testing<a class="anchor" aria-label="anchor" href="#testing"></a>
 </h2>
-<p>The package ships with <strong>110 unit tests</strong> that exercise every tool wrapper, every dispatch branch, and every utility — yielding <strong>99% line coverage</strong> across <code>R/run.R</code>, <code>R/tools.R</code>, and <code>R/utils.R</code>.</p>
+<p>The package ships with <strong>121 unit tests</strong> that exercise every tool wrapper, every dispatch branch, and every utility — yielding <strong>99% line coverage</strong> across <code>R/run.R</code>, <code>R/tools.R</code>, and <code>R/utils.R</code>.</p>
 <p>Run the suite locally:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plain run (fast)</span></span>
@@ -665,24 +677,28 @@
 <span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>├── README.Rmd            <span class="co"># Comprehensive introduction of the project</span></span>
 <span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>├── RELEASE_CHECKLIST     <span class="co"># What to check during launching a new version</span></span>
 <span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>├── R<span class="sc">/</span></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="er">|</span>   ├── run.R             <span class="co"># Entry point: run() → mcp_server(tools = all_tools())</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="er">|</span>   ├── run.R             <span class="co"># Entry point: run() → mcp_server(tools = all_tools()), server instructions</span></span>
 <span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="sc">|</span>   ├── tools.R           <span class="co"># All 29 ellmer::tool() definitions</span></span>
 <span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="sc">|</span>   ├── utils.R           <span class="co"># parse_date(), slim_ts(), safe_to_csv(), safe_to_cache()</span></span>
 <span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="sc">|</span>   └── db.R              <span class="co"># In-memory DuckDB singleton + sql_query / list / describe helpers</span></span>
 <span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>├── tests</span>
 <span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="sc">|</span>   ├── testthat.R        <span class="co"># Test framework helper</span></span>
 <span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="sc">|</span>   └── testthat</span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>run.R    <span class="co"># Unit tests of run.R (12 tests)</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>run.R    <span class="co"># Unit tests of run.R (16 tests)</span></span>
 <span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>tools.R  <span class="co"># Unit tests of tools.R (51 tests)</span></span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>utils.R  <span class="co"># Unit tests of utils.R (17 tests)</span></span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="sc">|</span>       └── test<span class="sc">-</span>db.R     <span class="co"># Unit tests of db.R (30 tests)</span></span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>├── man</span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="sc">|</span>   └── run.Rd            <span class="co"># Documentation of functions in R/run.R</span></span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>└── .github<span class="sc">/</span></span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>    ├── pull_request_template.md</span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>    └── ISSUE_TEMPLATE</span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>       ├── bug_report.md</span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>       └── feature_request.md</span></code></pre></div>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="sc">|</span>       ├── test<span class="sc">-</span>utils.R  <span class="co"># Unit tests of utils.R (20 tests)</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="sc">|</span>       └── test<span class="sc">-</span>db.R     <span class="co"># Unit tests of db.R (34 tests)</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>├── inst</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="sc">|</span>   └── skills</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="sc">|</span>       └── entsoe<span class="sc">-</span>market<span class="sc">-</span>data</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="sc">|</span>           └── SKILL.md  <span class="co"># Agent Skill: how an agent should use this server</span></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>├── man</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="sc">|</span>   └── run.Rd            <span class="co"># Documentation of functions in R/run.R</span></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>└── .github<span class="sc">/</span></span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>    ├── pull_request_template.md</span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>    └── ISSUE_TEMPLATE</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>       ├── bug_report.md</span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>       └── feature_request.md</span></code></pre></div>
 <div class="section level3">
 <h3 id="token-budget-design">Token budget design<a class="anchor" aria-label="anchor" href="#token-budget-design"></a>
 </h3>
@@ -700,7 +716,7 @@
 <li>
 <a href="https://github.com/posit-dev/mcptools" class="external-link"><code>mcptools</code></a> (GitHub)</li>
 <li>
-<code>ellmer</code>, <code>lubridate</code>, <code>jsonlite</code>, <code>duckdb</code>, <code>DBI</code>, <code>digest</code> (CRAN)</li>
+<code>ellmer</code>, <code>lubridate</code>, <code>jsonlite</code>, <code>duckdb</code>, <code>DBI</code>, <code>rlang</code> (CRAN)</li>
 </ul>
 <hr>
 </div>
