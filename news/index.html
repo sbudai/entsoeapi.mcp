@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">entsoeapi.mcp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,6 +33,22 @@
       <small>Source: <a href="https://github.com/sbudai/entsoeapi.mcp/blob/v0.6.1/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.1" id="entsoeapimcp-061">entsoeapi.mcp 0.6.1<a class="anchor" aria-label="anchor" href="#entsoeapimcp-061"></a></h2>
+<ul><li><p><strong>The Docker image builds again</strong>: its build-time smoke test still expected 29 tools, so the image failed to build once 0.6.0 added <code>congestion_management</code>. The test no longer hard-codes a count: it checks that every tool defined in the package is served, under a unique name, as a valid tool definition. Neither 0.5.0 nor 0.6.0 reached Docker Hub, so this is the first image since 0.4.0 and carries the changes of both.</p></li>
+<li><p><strong>Docker images are published by CI</strong>: pushing a <code>vX.Y.Z</code> tag runs <code>.github/workflows/docker.yaml</code>, which builds the image, smoke-tests it (MCP <code>initialize</code>, <code>tools/list</code> lists every tool, runs as the non-root <code>mcp</code> user) and pushes <code>sbudai/entsoeapi.mcp:vX.Y.Z</code> and <code>:latest</code>. An existing tag can be (re)published with a manual run of the workflow.</p></li>
+<li><p><strong>Release checklist</strong>: the <code>initialize</code> smoke test passed without any output, because the server exits as soon as stdin closes, before it answers; stdin is now kept open. A <code>tools/list</code> smoke test was added, and section 7 describes the CI publishing, with the manual <code>docker push</code> kept as a fallback.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="entsoeapimcp-060">entsoeapi.mcp 0.6.0<a class="anchor" aria-label="anchor" href="#entsoeapimcp-060"></a></h2>
+<div class="section level3">
+<h3 id="entsoeapi-0-6-0">entsoeapi 1.3.1<a class="anchor" aria-label="anchor" href="#entsoeapi-0-6-0"></a></h3>
+<ul><li><p><strong>New <code>congestion_management</code> tool</strong> (ENTSO-E 13.1.A-C), one tool with a <code>type</code> argument so the tool list sent with every request grows by one: <code>redispatching_internal</code> (default, control-area <code>eic</code>), <code>redispatching_cross_border</code> and <code>countertrading</code> (<code>eic_in</code>, <code>eic_out</code>), and <code>costs</code> (monthly costs of redispatching, countertrading and other remedial actions, optional <code>event_nature</code> <code>A46</code> / <code>B03</code> / <code>B04</code>).</p></li>
+<li><p><strong>Requires entsoeapi &gt;= 1.3.1</strong>, which fixed the tidy output of <code>costs_of_congestion_management()</code> (the cost amount was dropped, monthly points drifted to Mar 3 instead of Mar 1 and ignored CEST, and a sparse A03 series lost its last month). <code>costs</code> therefore returns <code>ts_point_congestion_cost_price_amount</code> with one row per month, starting at local midnight (CET/CEST) on the first of the month.</p></li>
+<li><p><strong><code>gen_time_series(type = "wind_solar")</code> takes <code>process_type</code></strong>: <code>A01</code> day-ahead (new default), <code>A40</code> intraday or <code>A18</code> current forecast. Before, only <code>A18</code> (entsoeapi’s default) was reachable, although the tool and the README called it a day-ahead forecast.</p></li>
+<li><p><strong>No-data replies no longer fail</strong>: when ENTSO-E has no data it sends an acknowledgement, which entsoeapi returns as a one-row frame. Caching it emptied every column and DuckDB raised “Data frame with at least one column required”. The tools now return <code>(no data)</code> followed by the API’s reason.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="entsoeapimcp-050">entsoeapi.mcp 0.5.0<a class="anchor" aria-label="anchor" href="#entsoeapimcp-050"></a></h2>
 <ul><li><p><strong>Server instructions</strong>: the MCP <code>initialize</code> reply now carries real instructions for the model (resolve the EIC with <code>area_eic</code> first, fetch once, answer with <code>sql_query</code> on the cached table, handle several series and <code># error:</code> results) instead of mcptools’ generic “This provides information about a running R session.”. mcptools offers no argument for this, so <code><a href="../reference/run.html">run()</a></code> wraps its internal <code><a href="https://rdrr.io/r/base/capabilities.html" class="external-link">capabilities()</a></code>; with an mcptools version that lacks it, the server starts with the default text. <code>serverInfo</code> now reports <code>entsoeapi.mcp</code> and the package version instead of “R mcptools server”.</p></li>
