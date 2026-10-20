@@ -34,7 +34,8 @@
 
 - [ ] `docker build -t sbudai/entsoeapi.mcp:latest -t sbudai/entsoeapi.mcp:vX.Y.Z .` — builds without errors
 - [ ] Smoke-test the image responds to an MCP `initialize` request using CLI:\
-  `echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}' | docker run --rm -i -e ENTSOE_PAT=test sbudai/entsoeapi.mcp:latest`
+  `(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}'; sleep 10) | docker run --rm -i -e ENTSOE_PAT=test sbudai/entsoeapi.mcp:latest`\
+  — expect one JSON line with `"result"`; the `sleep` keeps stdin open, since the server exits on EOF before answering
 - [ ] Exercise at least one live tool call end-to-end from Claude Desktop against the new image with a real `ENTSOE_PAT`
 - [ ] Image size is reasonable (check with `docker images sbudai/entsoeapi.mcp`)
 - [ ] Image runs as non-root `mcp` user (`docker run --rm sbudai/entsoeapi.mcp:latest id`)
@@ -47,11 +48,27 @@
 
 ## 7. Publish Docker Image
 
+Pushing the `vX.Y.Z` tag in section 6 triggers `.github/workflows/docker.yaml`,
+which builds the image, re-runs the section 5 smoke tests (MCP `initialize`,
+non-root `mcp` user) and pushes `sbudai/entsoeapi.mcp:vX.Y.Z` and `:latest`
+to Docker Hub (a pre-release tag such as `v1.0.0-rc.1` does not move `latest`).
+The tag must match the `DESCRIPTION` version, or the workflow fails.
+
+- [ ] One-time setup: repository secrets `DOCKERHUB_USERNAME` (`sbudai`) and `DOCKERHUB_TOKEN` (a Docker Hub personal access token with Read & Write scope) exist under *Settings → Secrets and variables → Actions*
+- [ ] The `docker.yaml` run for the tag succeeded: `gh run list --workflow docker.yaml --repo sbudai/entsoeapi.mcp`
+- [ ] Verify both tags appear at <https://hub.docker.com/r/sbudai/entsoeapi.mcp/tags>
+- [ ] `docker pull sbudai/entsoeapi.mcp:latest` from a clean host and re-run the smoke test
+
+To (re)publish an existing tag, e.g. one released before the workflow existed,
+run the workflow by hand; set `latest=false` when the tag is not the newest
+release:\
+`gh workflow run docker.yaml --repo sbudai/entsoeapi.mcp -f tag=vX.Y.Z -f latest=true`
+
+Fallback, if CI is unavailable — publish from the image built in section 5:
+
 - [ ] `docker login` to Docker Hub with the `sbudai` account
 - [ ] `docker push sbudai/entsoeapi.mcp:vX.Y.Z`
 - [ ] `docker push sbudai/entsoeapi.mcp:latest`
-- [ ] Verify both tags appear at <https://hub.docker.com/r/sbudai/entsoeapi.mcp/tags>
-- [ ] `docker pull sbudai/entsoeapi.mcp:latest` from a clean host and re-run the smoke test
 
 ## 8. Announce
 

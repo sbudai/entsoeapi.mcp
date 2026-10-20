@@ -1,0 +1,173 @@
+# Builds the Docker image, smoke-tests it and publishes it to Docker Hub as
+# sbudai/entsoeapi.mcp:<tag> and sbudai/entsoeapi.mcp:latest.
+#
+#   - push of a vX.Y.Z tag: build, test, publish <tag> and latest
+#     (a pre-release tag such as v1.0.0-rc.1 publishes <tag> only);
+#   - workflow_dispatch:    build, test and publish an existing tag, e.g. to
+#                           backfill a release that was never pushed;
+#   - push to main:         build and test only. This also fills the layer
+#                           cache, because tag runs can restore caches of the
+#                           default branch but not those of other tags.
+#
+# Requires two repository secrets (Settings > Secrets and variables > Actions):
+#   DOCKERHUB_USERNAME - the Docker Hub account, sbudai
+#   DOCKERHUB_TOKEN    - a Docker Hub personal access token with Read & Write
+#                        scope (https://app.docker.com/settings/personal-access-tokens)
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing git tag to build and publish, e.g. v0.6.0
+        required: true
+        type: string
+      latest:
+        description: Also point the latest tag at this image
+        required: false
+        type: boolean
+        default: true
+
+name: docker.yaml
+
+permissions:
+  contents: read
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Never run two builds of the same ref at once
+    concurrency:
+      group: docker-${{ inputs.tag || github.ref }}
+    env:
+      IMAGE: sbudai/entsoeapi.mcp
+    steps:
+      - name: Resolve tag
+        id: tag
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_LATEST: ${{ inputs.latest }}
+        run: |
+          case "$EVENT/$REF" in
+            workflow_dispatch/*) tag=$INPUT_TAG latest=$INPUT_LATEST publish=true ;;
+            push/refs/tags/*)    tag=${REF#refs/tags/} latest=auto publish=true ;;
+            *)                   tag=ci latest=false publish=false ;;
+          esac
+          if [ "$publish" = true ]; then
+            if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+              echo "::error::'$tag' is not a vX.Y.Z[-pre] version tag"
+              exit 1
+            fi
+            # latest only ever moves to a final release
+            if [ "$latest" = auto ]; then
+              [[ "$tag" == *-* ]] && latest=false || latest=true
+            fi
+            ref=refs/tags/$tag
+          else
+            ref=$REF
+          fi
+          {
+            echo "tag=$tag"
+            echo "ref=$ref"
+            echo "latest=$latest"
+            echo "publish=$publish"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+        id: checkout
+        with:
+          ref: ${{ steps.tag.outputs.ref }}
+
+      - name: Check tag matches DESCRIPTION
+        if: steps.tag.outputs.publish == 'true'
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          version=$(sed -n 's/^Version:[[:space:]]*//p' DESCRIPTION)
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::Tag $TAG does not match DESCRIPTION Version $version"
+            exit 1
+          fi
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          flavor: latest=false
+          tags: |
+            type=raw,value=${{ steps.tag.outputs.tag }}
+            type=raw,value=latest,enable=${{ steps.tag.outputs.latest }}
+          # A dispatched run starts on a branch: label the tag's commit instead
+          labels: |
+            org.opencontainers.image.version=${{ steps.tag.outputs.tag }}
+            org.opencontainers.image.revision=${{ steps.checkout.outputs.commit }}
+
+      - uses: docker/setup-buildx-action@v4
+
+      # Logging in early also lifts the anonymous pull rate limit for the
+      # rocker/r-ver and ubuntu base images
+      - name: Log in to Docker Hub
+        if: steps.tag.outputs.publish == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and load image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # RELEASE_CHECKLIST.md section 5. The server exits as soon as stdin hits
+      # EOF, so keep stdin open until the response arrives (60 s at most).
+      - name: Smoke test MCP initialize
+        env:
+          IMAGE_REF: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+        run: |
+          request='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}'
+          response=$(mktemp)
+          # Polling the file the container writes to is the point here
+          # shellcheck disable=SC2094
+          {
+            echo "$request"
+            for _ in $(seq 60); do
+              [ -s "$response" ] && break
+              sleep 1
+            done
+          } | docker run --rm -i -e ENTSOE_PAT=test "$IMAGE_REF" > "$response"
+          cat "$response"
+          head -n 1 "$response" \
+            | jq -e '.id == 1 and (.result.protocolVersion | type == "string")' > /dev/null
+
+      - name: Check image runs as non-root mcp user
+        env:
+          IMAGE_REF: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+        run: |
+          docker run --rm "$IMAGE_REF" id
+          [ "$(docker run --rm "$IMAGE_REF" id -un)" = mcp ]
+
+      - name: Report image size
+        run: docker images "$IMAGE"
+
+      # Same inputs as the build above, so every layer comes from the cache
+      - name: Push image
+        if: steps.tag.outputs.publish == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
