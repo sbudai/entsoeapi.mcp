@@ -25,6 +25,7 @@
 #' @export
 run <- function(session_tools = FALSE) {
   use_eic_disk_cache()
+  use_server_instructions()
   mcp_server(  # nolint: object_usage_linter
     tools = lapply(X = all_tools(), FUN = mute_stdout_tool),
     session_tools = session_tools
@@ -66,6 +67,92 @@ use_eic_disk_cache <- function(
   if (!writable) return(invisible(NULL))
   options(entsoeapi.cache_dir = cache_dir)
   invisible(cache_dir)
+}
+
+
+#' Server-level guidance sent to the MCP client in the `initialize` reply.
+#'
+#' Clients show this to the model once per session, before any tool call, so
+#' it carries the cross-tool workflow that no single tool description can:
+#' resolve the EIC first, then fetch, then aggregate in the session cache.
+#'
+#' @noRd
+server_instructions <- paste(
+  "Real data from the ENTSO-E Transparency Platform for European electricity",
+  "markets: day-ahead and intraday prices, load, generation, installed",
+  "capacity, cross-border flows, transfer capacities, outages and balancing.",
+  "Prefer these tools over web search or made-up numbers for any European",
+  "power market question.",
+  "Workflow:",
+  "(1) Resolve the area first with area_eic. Many countries have several",
+  "EICs; prices are per bidding zone (BZN), load per control area (CTA),",
+  "flows and capacities per border. Show the matches and let the user",
+  "confirm when more than one fits.",
+  "(2) Call a data tool with dates as YYYY-MM-DD (CET); one request covers",
+  "at most one year. Point timestamps are stored twice: ts_point_dt_start",
+  "in UTC and ts_point_dt_start_cet in Central European wall-clock time",
+  "(CET/CEST, DST handled); group by the _cet column for local days and",
+  "hours instead of adding a fixed INTERVAL. Each data tool stores its full",
+  "result in a session DuckDB table and returns the table name, schema and",
+  "a few sample rows.",
+  "The sample rows are not the result.",
+  "(3) Answer with sql_query against that table (GROUP BY to stay under the",
+  "row cap) instead of calling the data tool again. Repeating a call with",
+  "the same arguments reuses the cached table; list_tables and",
+  "describe_table show what is already cached.",
+  "If a result reports several series (e.g. price sequences), filter",
+  "explicitly or ask which one the user means.",
+  "Errors come back as text starting with '# error:'; read them and retry",
+  "with corrected arguments."
+)
+
+
+#' Replace mcptools' generic server instructions with `server_instructions`.
+#'
+#' mcptools (1.0.3) hardcodes "This provides information about a running R
+#' session." in its internal `capabilities()`, which builds the `initialize`
+#' reply, and `mcp_server()` offers no argument to change it. The function is
+#' swapped in mcptools' namespace for a wrapper that calls the original and
+#' only overrides `instructions` (when the negotiated protocol has it) and
+#' `serverInfo`. If a future mcptools drops `capabilities()`, nothing is
+#' patched and the server still starts.
+#'
+#' @param instructions Text to send as the server instructions.
+#'
+#' @return `TRUE` (invisibly) when the patch is in place, otherwise `FALSE`.
+#'
+#' @importFrom utils packageVersion
+#'
+#' @noRd
+use_server_instructions <- function(instructions = server_instructions) {
+  ns <- asNamespace("mcptools")
+  if (!exists(x = "capabilities", envir = ns, inherits = FALSE)) {
+    return(invisible(FALSE))
+  }
+  # keep the pristine function so repeated run() calls do not nest wrappers
+  if (is.null(.pkg_env$mcptools_capabilities)) {  # nolint: object_usage_linter
+    .pkg_env$mcptools_capabilities <- get(x = "capabilities", envir = ns)  # nolint: object_usage_linter
+  }
+  original <- .pkg_env$mcptools_capabilities  # nolint: object_usage_linter
+  if (!is.function(original)) return(invisible(FALSE))
+
+  server_info <- list(
+    name = "entsoeapi.mcp",
+    version = as.character(packageVersion(pkg = "entsoeapi.mcp"))
+  )
+  patched <- function(...) {
+    res <- original(...)
+    if (!is.list(res)) return(res)
+    if (!is.null(res$instructions)) res$instructions <- instructions
+    res$serverInfo <- server_info
+    res
+  }
+
+  locked <- bindingIsLocked(sym = "capabilities", env = ns)
+  if (locked) unlockBinding(sym = "capabilities", env = ns)
+  assign(x = "capabilities", value = patched, envir = ns)
+  if (locked) lockBinding(sym = "capabilities", env = ns)
+  invisible(TRUE)
 }
 
 

@@ -99,6 +99,7 @@ testthat::test_that(
     captured <- NULL
     testthat::with_mocked_bindings(
       use_eic_disk_cache = \(...) invisible(NULL),
+      use_server_instructions = \(...) invisible(TRUE),
       mcp_server = \(tools, session_tools) {
         captured <<- list(tools = tools, session_tools = session_tools)
         invisible(NULL)
@@ -119,6 +120,7 @@ testthat::test_that(
     captured <- NULL
     testthat::with_mocked_bindings(
       use_eic_disk_cache = \(...) invisible(NULL),
+      use_server_instructions = \(...) invisible(TRUE),
       mcp_server = \(tools, session_tools) {
         captured <<- list(tools = tools, session_tools = session_tools)
         invisible(NULL)
@@ -138,6 +140,7 @@ testthat::test_that(
     captured_tools <- NULL
     testthat::with_mocked_bindings(
       use_eic_disk_cache = \(...) invisible(NULL),
+      use_server_instructions = \(...) invisible(TRUE),
       mcp_server = function(tools, session_tools) {
         captured_tools <<- tools
         invisible(NULL)
@@ -215,5 +218,69 @@ testthat::test_that(
       object = getOption("entsoeapi.cache_dir"),
       expected = "/user/choice"
     )
+  }
+)
+
+# test use_server_instructions()
+# Restores mcptools' original capabilities() after a test patched it.
+restore_capabilities <- function() {
+  original <- entsoeapi.mcp:::.pkg_env$mcptools_capabilities
+  if (is.null(original)) return(invisible(NULL))
+  ns <- asNamespace("mcptools")
+  locked <- bindingIsLocked(sym = "capabilities", env = ns)
+  if (locked) unlockBinding(sym = "capabilities", env = ns)
+  assign(x = "capabilities", value = original, envir = ns)
+  if (locked) lockBinding(sym = "capabilities", env = ns)
+  invisible(NULL)
+}
+
+testthat::test_that(
+  desc = "use_server_instructions() replaces the initialize instructions",
+  code = {
+    on.exit(restore_capabilities(), add = TRUE)
+    testthat::expect_true(
+      object = entsoeapi.mcp:::use_server_instructions(instructions = "hello")
+    )
+    res <- mcptools:::capabilities()
+    testthat::expect_identical(object = res$instructions, expected = "hello")
+    testthat::expect_identical(
+      object = res$serverInfo$name,
+      expected = "entsoeapi.mcp"
+    )
+    # the capability flags still come from mcptools
+    testthat::expect_true(object = "tools" %in% names(res$capabilities))
+  }
+)
+
+testthat::test_that(
+  desc = "use_server_instructions() does not nest wrappers on repeated calls",
+  code = {
+    on.exit(restore_capabilities(), add = TRUE)
+    entsoeapi.mcp:::use_server_instructions(instructions = "first")
+    entsoeapi.mcp:::use_server_instructions(instructions = "second")
+    testthat::expect_identical(
+      object = mcptools:::capabilities()$instructions,
+      expected = "second"
+    )
+  }
+)
+
+testthat::test_that(
+  desc = "use_server_instructions() adds no instructions to old protocols",
+  code = {
+    on.exit(restore_capabilities(), add = TRUE)
+    entsoeapi.mcp:::use_server_instructions(instructions = "hello")
+    res <- mcptools:::capabilities(protocol_version = "2024-11-05")
+    testthat::expect_null(object = res$instructions)
+  }
+)
+
+testthat::test_that(
+  desc = "server_instructions mentions the core workflow tools",
+  code = {
+    text <- entsoeapi.mcp:::server_instructions
+    for (tool_name in c("area_eic", "sql_query", "list_tables")) {
+      testthat::expect_match(object = text, regexp = tool_name, fixed = TRUE)
+    }
   }
 )

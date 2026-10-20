@@ -36,13 +36,17 @@ sections <- list(
   "Outages" = c(
     "outages_gen_units", "outages_prod_units", "outages_transmission_grid"
   ),
-  "Balancing" = c("imbalance_prices", "imbalance_volumes", "contracted_reserves"),
+  "Balancing" = c(
+    "imbalance_prices", "imbalance_volumes", "contracted_reserves"
+  ),
   "Session DuckDB cache" = c("sql_query", "list_tables", "describe_table")
 )
 sections[["Other"]] <- setdiff(tool_names, unlist(sections))
 
 # markdown table cells must not contain pipes or line breaks
-cell <- \(x) gsub(pattern = "\\|", replacement = "\\\\|", x = gsub("\n", " ", x))
+cell <- \(x) {
+  gsub(pattern = "\\|", replacement = "\\\\|", x = gsub("\n", " ", x))
+}
 
 render_tool <- function(tool) {
   cat("### `", attr(x = tool, which = "name"), "`\n\n", sep = "")

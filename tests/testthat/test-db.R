@@ -445,6 +445,49 @@ testthat::test_that(
 
 testthat::test_that(
   desc = paste(
+    "db_store() warns about multiple series in entsoeapi's tidy column names",
+    "and suggests a query on the price, not on an id column"
+  ),
+  code = {
+    .clear_db()
+    # shape of a real energy_prices table (AT, 2026-10-12): the identifier
+    # and period columns come before the point timestamp and the price
+    df <- data.frame(
+      ts_time_interval_start = as.POSIXct(
+        rep("2026-10-11 22:00", 4L), tz = "UTC"
+      ),
+      ts_mrid = c(1, 1, 2, 2),
+      ts_point_dt_start = as.POSIXct(
+        rep(c("2026-10-11 22:00", "2026-10-11 22:15"), 2L), tz = "UTC"
+      ),
+      ts_point_price_amount = c(195.36, 190.12, 190.0, 186.5),
+      ts_classification_sequence_position = c(2, 2, 1, 1)
+    )
+    env <- entsoeapi.mcp:::db_store(
+      df        = df,
+      prefix    = "ms_tidy_test",
+      args_list = list(seed = "multi-series-tidy")
+    )
+    testthat::expect_match(object = env, regexp = "WARNING: multiple series")
+    testthat::expect_match(
+      object = env,
+      regexp = "ts_classification_sequence_position: ",
+      fixed = TRUE
+    )
+    testthat::expect_match(object = env, regexp = "ts_mrid: ", fixed = TRUE)
+    testthat::expect_match(
+      object = env,
+      regexp = paste0(
+        "date_trunc('week', ts_point_dt_start) AS wk, ",
+        "AVG(ts_point_price_amount)"
+      ),
+      fixed = TRUE
+    )
+  }
+)
+
+testthat::test_that(
+  desc = paste(
     "db_store() omits the WARNING block when no series-discriminator",
     "column exists"
   ),
@@ -479,6 +522,90 @@ testthat::test_that(
   }
 )
 
+
+testthat::test_that(
+  desc = paste(
+    "safe_to_cache() stores a DST-safe _cet column and points the envelope",
+    "at it"
+  ),
+  code = {
+    .clear_db()
+    # 2026-10-25 in Vienna: clocks go back, the delivery day has 25 hours
+    utc <- seq(
+      from = as.POSIXct("2026-10-24 22:00", tz = "UTC"),
+      to = as.POSIXct("2026-10-25 22:45", tz = "UTC"),
+      by = "15 min"
+    )
+    env <- entsoeapi.mcp:::safe_to_cache(
+      df = data.frame(
+        ts_point_dt_start = utc,
+        ts_point_price_amount = as.numeric(seq_along(utc))
+      ),
+      prefix = "dst_test",
+      args_list = list(seed = "dst")
+    )
+    testthat::expect_match(
+      object = env, regexp = "ts_point_dt_start_cet TIMESTAMP", fixed = TRUE
+    )
+    testthat::expect_match(
+      object = env,
+      regexp = "# time: ts_point_dt_start is UTC; ts_point_dt_start_cet",
+      fixed = TRUE
+    )
+    testthat::expect_match(
+      object = env,
+      regexp = "date_trunc('week', ts_point_dt_start_cet)",
+      fixed = TRUE
+    )
+    # local midnight keeps its clock in the sample (as.character drops it)
+    testthat::expect_match(
+      object = env,
+      regexp = "2026-10-24 22:00:00,2026-10-25 00:00:00,",
+      fixed = TRUE
+    )
+    tbl <- regmatches(x = env, m = regexpr("dst_test_[0-9a-f]+", env))
+    by_day <- DBI::dbGetQuery(
+      conn = entsoeapi.mcp:::db_con(),
+      statement = sprintf(
+        fmt = paste(
+          "SELECT CAST(ts_point_dt_start_cet AS DATE) AS d, COUNT(*) AS n",
+          "FROM %s GROUP BY 1"
+        ),
+        tbl
+      )
+    )
+    testthat::expect_identical(object = nrow(by_day), expected = 1L)
+    testthat::expect_identical(object = as.integer(by_day$n), expected = 100L)
+  }
+)
+
+testthat::test_that(
+  desc = "db_store() lists multi-series values in sorted order",
+  code = {
+    .clear_db()
+    env <- entsoeapi.mcp:::db_store(
+      df = data.frame(ts_mrid = c(3, 1, 2, 3), x = 1:4),
+      prefix = "sorted_ms_test",
+      args_list = list(seed = "sorted")
+    )
+    testthat::expect_match(
+      object = env, regexp = "ts_mrid: 1, 2, 3", fixed = TRUE
+    )
+  }
+)
+
+testthat::test_that(
+  desc = "db_store() omits the time note when there is no _cet column",
+  code = {
+    .clear_db()
+    env <- entsoeapi.mcp:::db_store(
+      df = data.frame(x = 1:3),
+      prefix = "no_time_test",
+      args_list = list(seed = "no-time")
+    )
+    testthat::expect_false(object = grepl(pattern = "# time:", x = env))
+  }
+)
 
 testthat::test_that(
   desc = "safe_to_cache() does not evaluate the fetch when the table exists",
@@ -562,7 +689,10 @@ testthat::test_that(
   code = {
     .clear_db()
     con <- entsoeapi.mcp:::db_con()
-    DBI::dbExecute(conn = con, statement = "CREATE TEMP TABLE tmp_t AS SELECT 7 AS v")
+    DBI::dbExecute(
+      conn = con,
+      statement = "CREATE TEMP TABLE tmp_t AS SELECT 7 AS v"
+    )
     testthat::expect_match(
       object = entsoeapi.mcp:::db_query(sql = "SELECT v FROM tmp_t"),
       regexp = "7"

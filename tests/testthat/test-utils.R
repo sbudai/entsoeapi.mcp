@@ -107,6 +107,100 @@ testthat::test_that(
 )
 
 
+# ── add_cet_time() ───────────────────────────────────────────────────────────
+
+# quarter-hourly UTC points covering one Central European delivery day
+.qh_day <- function(from_utc, to_utc) {
+  seq(
+    from = as.POSIXct(from_utc, tz = "UTC"),
+    to = as.POSIXct(to_utc, tz = "UTC") - 15L * 60L,
+    by = "15 min"
+  )
+}
+
+testthat::test_that(
+  desc = "add_cet_time() adds the _cet column right after its source",
+  code = {
+    df <- data.frame(
+      ts_mrid = 1,
+      ts_point_dt_start = as.POSIXct(
+        c("2026-07-01 10:00", "2026-01-15 10:00"), tz = "UTC"
+      ),
+      ts_point_price_amount = c(50, 60)
+    )
+    out <- entsoeapi.mcp:::add_cet_time(df = df)
+    testthat::expect_identical(
+      object = names(out),
+      expected = c(
+        "ts_mrid", "ts_point_dt_start", "ts_point_dt_start_cet",
+        "ts_point_price_amount"
+      )
+    )
+    # summer is UTC+2 (CEST), winter UTC+1 (CET); stored as a UTC clock
+    testthat::expect_identical(
+      object = format(out$ts_point_dt_start_cet, tz = "UTC"),
+      expected = c("2026-07-01 12:00:00", "2026-01-15 11:00:00")
+    )
+    testthat::expect_identical(
+      object = out$ts_point_dt_start, expected = df$ts_point_dt_start
+    )
+  }
+)
+
+testthat::test_that(
+  desc = "add_cet_time() keeps DST changeover days whole (100 and 92 points)",
+  code = {
+    autumn <- entsoeapi.mcp:::add_cet_time(
+      df = data.frame(
+        ts_point_dt_start = .qh_day("2026-10-24 22:00", "2026-10-25 23:00")
+      )
+    )
+    testthat::expect_identical(
+      object = table(as.Date(autumn$ts_point_dt_start_cet, tz = "UTC")),
+      expected = table(as.Date(rep("2026-10-25", 100L)))
+    )
+    spring <- entsoeapi.mcp:::add_cet_time(
+      df = data.frame(
+        ts_point_dt_start = .qh_day("2027-03-27 23:00", "2027-03-28 22:00")
+      )
+    )
+    testthat::expect_identical(
+      object = table(as.Date(spring$ts_point_dt_start_cet, tz = "UTC")),
+      expected = table(as.Date(rep("2027-03-28", 92L)))
+    )
+    # the 02:00 local hour is skipped in spring
+    testthat::expect_false(
+      object = any(
+        format(spring$ts_point_dt_start_cet, "%H", tz = "UTC") == "02"
+      )
+    )
+  }
+)
+
+testthat::test_that(
+  desc = "add_cet_time() handles bid_ts_ columns and skips everything else",
+  code = {
+    df <- data.frame(
+      bid_ts_point_dt_start = as.POSIXct("2026-07-01 10:00", tz = "UTC"),
+      ts_time_interval_start = as.POSIXct("2026-07-01 10:00", tz = "UTC"),
+      ts_point_dt_start = "2026-07-01 10:00"  # not POSIXct: left alone
+    )
+    out <- entsoeapi.mcp:::add_cet_time(df = df)
+    testthat::expect_identical(
+      object = names(out),
+      expected = c(
+        "bid_ts_point_dt_start", "bid_ts_point_dt_start_cet",
+        "ts_time_interval_start", "ts_point_dt_start"
+      )
+    )
+    testthat::expect_identical(
+      object = entsoeapi.mcp:::add_cet_time(df = data.frame(x = 1:2)),
+      expected = data.frame(x = 1:2)
+    )
+  }
+)
+
+
 # ── safe_to_csv() ────────────────────────────────────────────────────────────
 
 testthat::test_that(
@@ -200,7 +294,8 @@ testthat::test_that(
 testthat::test_that(
   desc = "parse_date() rejects NA, empty, non-character and vector input",
   code = {
-    for (bad in list(NA_character_, "", 20240315, c("2024-01-01", "2024-01-02"))) {
+    my_list <- list(NA_character_, "", 20240315, c("2024-01-01", "2024-01-02"))
+    for (bad in my_list) {
       testthat::expect_error(
         object = entsoeapi.mcp:::parse_date(ts = bad),
         regexp = "must be a date in YYYY-MM-DD format"

@@ -81,12 +81,55 @@ slim_ts <- function(
 }
 
 
+#' Add a Central European wall-clock twin of each point timestamp column.
+#'
+#' entsoeapi returns point timestamps (`ts_point_dt_start`,
+#' `bid_ts_point_dt_start`) as UTC instants, but questions are asked about
+#' local delivery days. The sandboxed DuckDB cannot load the ICU extension,
+#' so `timezone()` / `AT TIME ZONE` are unavailable, and a fixed
+#' `+ INTERVAL 2 HOUR` shift is wrong for part of every DST changeover day.
+#' The conversion is therefore done here, in R, where the tz database is
+#' available.
+#'
+#' The new column (`<col>_cet`) is placed right after its source. It holds
+#' the Europe/Brussels wall-clock time (CET in winter, CEST in summer) stored
+#' as a zone-less TIMESTAMP: the instant is shifted with `force_tz()` so
+#' that DuckDB, which stores the UTC instant, shows the local clock reading.
+#' All EU zones change clocks at the same instant, so other EU areas are a
+#' constant offset from this column (GB/IE/PT -1 h, FI/Baltics/GR/RO/BG +1 h).
+#'
+#' @param df A data frame.
+#' @param tz Reference time zone; defaults to `"Europe/Brussels"`.
+#'
+#' @importFrom lubridate force_tz with_tz
+#'
+#' @return `df` with one extra `_cet` column per POSIXct `*point_dt_start`
+#'   column.
+#'
+#' @noRd
+add_cet_time <- function(df, tz = "Europe/Brussels") {
+  cols <- grep(pattern = "point_dt_start$", x = names(df), value = TRUE)
+  for (col in cols) {
+    if (!inherits(x = df[[col]], what = "POSIXct")) next
+    new <- paste0(col, "_cet")
+    old_names <- names(df)
+    df[[new]] <- force_tz(  # nolint: object_usage_linter
+      time = with_tz(time = df[[col]], tzone = tz),  # nolint: object_usage_linter
+      tzone = "UTC"
+    )
+    df <- df[append(x = old_names, values = new, after = match(col, old_names))]
+  }
+  df
+}
+
+
 #' Cache a data frame in the session DuckDB and return an envelope.
 #'
 #' Used by the 21 time-series tools to push the full result into an in-memory
 #' DuckDB table; the LLM then aggregates / filters / joins via the `sql_query`
 #' tool. Constant metadata columns are dropped first via `slim_ts()` — they
-#' waste DuckDB space *and* preview tokens.
+#' waste DuckDB space *and* preview tokens — and `add_cet_time()` adds the
+#' Central European wall-clock column next to each point timestamp.
 #'
 #' Falls back to `safe_to_csv()` for NULL / empty frames and non-data-frame
 #' results (occasional `entsoeapi` helpers return nested lists).
@@ -114,7 +157,7 @@ safe_to_cache <- function(df, prefix, args_list) {
   }
   if (is.null(df) || (is.data.frame(df) && nrow(df) == 0L)) return("(no data)")
   if (!is.data.frame(df)) return(safe_to_csv(df))
-  df <- slim_ts(df = df)
+  df <- add_cet_time(df = slim_ts(df = df))
   db_store(df = df, prefix = prefix, args_list = args_list)  # nolint: object_usage_linter
 }
 

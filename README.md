@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-![Tests](https://img.shields.io/badge/tests-110%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-121%20passing-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)
 ![Tools](https://img.shields.io/badge/tools-29-blue)
 ![R](https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue)
@@ -221,32 +221,50 @@ One tool (`gen_capacity`) with a `per_unit` parameter:
 Every time-series tool inserts its full result into an in-memory DuckDB
 table and returns an envelope. The envelope tells Claude — in every call
 — that statistics must be computed via `sql_query`, never from the
-schema sample, and warns when multiple `TimeSeries` (e.g. day-ahead
-Sequence 1 vs. Sequence 2) are stacked together in one cached table:
+schema sample, and warns when several `TimeSeries` are stacked together
+in one cached table. This is the real envelope for Austrian day-ahead
+prices on 12 October 2026: one day of 15-minute prices, but 288 rows,
+because the document holds classification sequence 2, sequence 1, and
+sequence 1 again under a third `ts_mrid`:
 
-    # table: energy_prices_a3f7d2
-    # rows: 336
-    # columns: dt_start TIMESTAMP, price DOUBLE, sequence INTEGER
-    # ────────────────────────────────────────────────────────────
-    # IMPORTANT — read before using this result:
+    # table: energy_prices_2c603b
+    # rows: 288
+    # columns: ts_in_domain_name VARCHAR, ts_out_domain_name VARCHAR, type VARCHAR, type_def VARCHAR, market_agreement_type VARCHAR, market_agreement_type_def VARCHAR, ts_auction_type VARCHAR, ts_auction_type_def VARCHAR, ts_business_type VARCHAR, ts_business_type_def VARCHAR, ts_time_interval_start TIMESTAMP, ts_time_interval_end TIMESTAMP, ts_mrid DOUBLE, ts_point_dt_start TIMESTAMP, ts_point_dt_start_cet TIMESTAMP, ts_point_price_amount DOUBLE, ts_currency_unit_name VARCHAR, ts_price_measure_unit_name VARCHAR, ts_classification_sequence_position DOUBLE
+    # ------------------------------------------------------------
+    # IMPORTANT - read before using this result:
     #   This is a CACHED TABLE, not a result set. The rows below
-    #   are a SCHEMA SAMPLE only — they are NOT representative of
+    #   are a SCHEMA SAMPLE only - they are NOT representative of
     #   the data, may omit other series, and MUST NOT be used for
     #   any analysis. NEVER compute averages, totals, min/max,
     #   counts, or any statistic from this sample.
     #   ALWAYS call sql_query(...) against the table named above
     #   for ANY aggregation, filter, statistic, or join.
-    # ────────────────────────────────────────────────────────────
+    # ------------------------------------------------------------
+    # time: ts_point_dt_start is UTC; ts_point_dt_start_cet is the same
+    #   instant in Central European wall-clock time (CET/CEST, DST
+    #   handled). Group by it for local days and hours; do not shift
+    #   by a fixed INTERVAL.
     # WARNING: multiple series present in this table:
-    #   sequence: 1, 2     (filter explicitly; do not assume one)
-    # schema sample (5 of 336 rows; do not use for analysis):
-    dt_start,price,sequence
-    2024-01-01 00:00:00,42.5,1
-    2024-01-01 01:00:00,41.2,1
-    2024-01-01 02:00:00,40.8,1
-    2024-01-01 03:00:00,40.1,1
-    2024-01-01 04:00:00,39.7,1
-    # suggested query: SELECT date_trunc('week', dt_start) AS wk, AVG(price) FROM energy_prices_a3f7d2 GROUP BY 1 ORDER BY 1
+    #   ts_classification_sequence_position: 1, 2     (filter explicitly; do not assume one)
+    #   ts_mrid: 1, 2, 3     (filter explicitly; do not assume one)
+    # schema sample (5 of 288 rows; do not use for analysis):
+    "ts_in_domain_name","ts_out_domain_name","type","type_def","market_agreement_type","market_agreement_type_def","ts_auction_type","ts_auction_type_def","ts_business_type","ts_business_type_def","ts_time_interval_start","ts_time_interval_end","ts_mrid","ts_point_dt_start","ts_point_dt_start_cet","ts_point_price_amount","ts_currency_unit_name","ts_price_measure_unit_name","ts_classification_sequence_position"
+    "Austria","Austria","A44","Price Document","A01","Daily contract","A01","Implicit","A62","Spot price",2026-10-11 22:00:00,2026-10-12 22:00:00,1,2026-10-11 22:00:00,2026-10-12 00:00:00,195.36,"EUR","MWH",2
+    "Austria","Austria","A44","Price Document","A01","Daily contract","A01","Implicit","A62","Spot price",2026-10-11 22:00:00,2026-10-12 22:00:00,1,2026-10-11 22:15:00,2026-10-12 00:15:00,190.12,"EUR","MWH",2
+    "Austria","Austria","A44","Price Document","A01","Daily contract","A01","Implicit","A62","Spot price",2026-10-11 22:00:00,2026-10-12 22:00:00,1,2026-10-11 22:30:00,2026-10-12 00:30:00,178.49,"EUR","MWH",2
+    "Austria","Austria","A44","Price Document","A01","Daily contract","A01","Implicit","A62","Spot price",2026-10-11 22:00:00,2026-10-12 22:00:00,1,2026-10-11 22:45:00,2026-10-12 00:45:00,178.24,"EUR","MWH",2
+    "Austria","Austria","A44","Price Document","A01","Daily contract","A01","Implicit","A62","Spot price",2026-10-11 22:00:00,2026-10-12 22:00:00,1,2026-10-11 23:00:00,2026-10-12 01:00:00,190,"EUR","MWH",2
+    # suggested query: SELECT date_trunc('week', ts_point_dt_start_cet) AS wk, AVG(ts_point_price_amount) FROM energy_prices_2c603b GROUP BY 1 ORDER BY 1
+
+Note that `ts_point_dt_start` is UTC (22:00 UTC is midnight in Vienna in
+summer), while `ts_point_dt_start_cet` holds the same instant in Central
+European wall-clock time, with daylight saving applied. The server
+computes it in R because the sandboxed DuckDB cannot load its time-zone
+extension, and a fixed `+ INTERVAL 2 HOUR` shift is wrong on changeover
+days. The sample rows show only sequence 2, so Claude would filter
+first,
+e.g. `WHERE ts_classification_sequence_position = 1 AND ts_mrid = 2`,
+then group by `ts_point_dt_start_cet`.
 
 The cache lives for the lifetime of one Claude Desktop session (the
 `docker run --rm -i` container). Identical queries within a session
@@ -260,10 +278,10 @@ capped at 1 GB (override with `-e ENTSOEAPI_MCP_DB_MEMORY=2GB`).
 for January 2024”*:
 
 1.  `area_eic(query = "Germany")` — resolve EIC code
-2.  `load(eic = "10Y...", period_start = "2024-01-01", period_end = "2024-01-31")`
-    — envelope with `table = load_actual_a3f7d2`
-3.  `sql_query(sql = "SELECT date_trunc('week', dt_start) AS wk, AVG(value)::INT AS avg_mw FROM load_actual_a3f7d2 GROUP BY 1 ORDER BY 1")`
-    — 5 weekly rows instead of 744 hourly rows
+2.  `load(eic = "10Y1001A1001A83F", period_start = "2024-01-01", period_end = "2024-02-01")`
+    — envelope with `table = load_actual_<hash>`
+3.  `sql_query(sql = "SELECT date_trunc('week', ts_point_dt_start_cet) AS wk, AVG(ts_point_quantity)::INT AS avg_mw FROM load_actual_<hash> GROUP BY 1 ORDER BY 1")`
+    — 5 weekly rows instead of 2,976 quarter-hourly rows
 
 ------------------------------------------------------------------------
 
@@ -284,10 +302,31 @@ for January 2024”*:
   tool is available. If Claude produces values without calling a tool,
   ask it to retry using the appropriate tool.
 
+The server also sends these rules to the client as its MCP
+`instructions` when a session starts, so the model sees the workflow
+(EIC first, fetch once, aggregate with `sql_query`) before its first
+tool call.
+
+## Agent skill
+
+[`inst/skills/entsoe-market-data/SKILL.md`](inst/skills/entsoe-market-data/SKILL.md)
+is an [Agent Skill](https://agentskills.io) that teaches an agent when
+and how to use this server: picking the right EIC per dataset, reading
+the cache envelope, writing the `sql_query` step, and the common
+pitfalls (several series in one table, UTC versus local timestamps). It
+needs the MCP server above to be connected. To use it with Claude Code,
+copy the folder into `~/.claude/skills/` (or a project’s
+`.claude/skills/`); in Claude Desktop, upload it as a zip under
+**Settings → Customize → Skills**. In an R installation it is at
+`system.file("skills", "entsoe-market-data", package = "entsoeapi.mcp")`.
+
 ## Data notes
 
 - **Timezone**: All dates are interpreted as CET (Central European Time;
-  UTC+1 / UTC+2 in summer) regardless of your local timezone.
+  UTC+1 / UTC+2 in summer) regardless of your local timezone. Cached
+  tables keep point timestamps in UTC (`ts_point_dt_start`) and add a
+  Central European wall-clock copy (`ts_point_dt_start_cet`) for
+  grouping by local day or hour.
 - **Resolution**: Load and generation data is typically at 15-minute or
   1-hour intervals
 - **Row cap**: The 21 time-series tools store their **full result** in
@@ -359,7 +398,7 @@ non-root `mcp` user. Override the R version with
 
 ## Testing
 
-The package ships with **110 unit tests** that exercise every tool
+The package ships with **121 unit tests** that exercise every tool
 wrapper, every dispatch branch, and every utility — yielding **99% line
 coverage** across `R/run.R`, `R/tools.R`, and `R/utils.R`.
 
@@ -395,17 +434,21 @@ the Transparency Platform.
     ├── README.Rmd            # Comprehensive introduction of the project
     ├── RELEASE_CHECKLIST     # What to check during launching a new version
     ├── R/
-    |   ├── run.R             # Entry point: run() → mcp_server(tools = all_tools())
+    |   ├── run.R             # Entry point: run() → mcp_server(tools = all_tools()), server instructions
     |   ├── tools.R           # All 29 ellmer::tool() definitions
     |   ├── utils.R           # parse_date(), slim_ts(), safe_to_csv(), safe_to_cache()
     |   └── db.R              # In-memory DuckDB singleton + sql_query / list / describe helpers
     ├── tests
     |   ├── testthat.R        # Test framework helper
     |   └── testthat
-    |       ├── test-run.R    # Unit tests of run.R (12 tests)
+    |       ├── test-run.R    # Unit tests of run.R (16 tests)
     |       ├── test-tools.R  # Unit tests of tools.R (51 tests)
-    |       ├── test-utils.R  # Unit tests of utils.R (17 tests)
-    |       └── test-db.R     # Unit tests of db.R (30 tests)
+    |       ├── test-utils.R  # Unit tests of utils.R (20 tests)
+    |       └── test-db.R     # Unit tests of db.R (34 tests)
+    ├── inst
+    |   └── skills
+    |       └── entsoe-market-data
+    |           └── SKILL.md  # Agent Skill: how an agent should use this server
     ├── man
     |   └── run.Rd            # Documentation of functions in R/run.R
     └── .github/
@@ -433,7 +476,7 @@ direct-CSV path because they’re small and interactive.
 - R ≥ 4.2.0
 - [`entsoeapi`](https://github.com/krose/entsoeapi) (GitHub)
 - [`mcptools`](https://github.com/posit-dev/mcptools) (GitHub)
-- `ellmer`, `lubridate`, `jsonlite`, `duckdb`, `DBI`, `digest` (CRAN)
+- `ellmer`, `lubridate`, `jsonlite`, `duckdb`, `DBI`, `rlang` (CRAN)
 
 ------------------------------------------------------------------------
 

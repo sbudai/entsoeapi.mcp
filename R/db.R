@@ -77,20 +77,20 @@ db_con <- function(
 #' table - no second hit to the ENTSO-E API (`safe_to_cache()` checks for
 #' the table before the API call is evaluated).
 #'
-#' Six hex chars give 16.7M-name space, plenty for a session-scoped cache.
+#' The hash is `rlang::hash()` (xxHash128 of the serialised list; rlang is
+#' already a dependency of entsoeapi, mcptools and ellmer). Six hex chars
+#' give a 16.7M-name space, plenty for a session-scoped cache.
 #'
 #' @param prefix Short, human-readable label, e.g. `"load_actual"`.
 #' @param args_list Named list of arguments that uniquely identify the call.
 #'
 #' @return A character scalar table name.
 #'
-#' @importFrom digest digest
+#' @importFrom rlang hash
 #'
 #' @noRd
 db_table_name <- function(prefix, args_list) {
-  h <- substr(
-    x = digest(object = args_list, algo = "md5"), start = 1L, stop = 6L  # nolint: object_usage_linter
-  )
+  h <- substr(x = hash(x = args_list), start = 1L, stop = 6L)  # nolint: object_usage_linter
   paste0(prefix, "_", h)
 }
 
@@ -108,8 +108,9 @@ db_table_name <- function(prefix, args_list) {
 #' # ------------------------------------------------------------
 #' # IMPORTANT - read before using this result: ...
 #' # ------------------------------------------------------------
+#' # time: <col> is UTC; <col>_cet is Central European ...   (if present)
 #' # WARNING: multiple series present in this table:   (only if detected)
-#' #   sequence: 1, 2   (filter explicitly; ...)
+#' #   ts_classification_sequence_position: 1, 2   (filter explicitly; ...)
 #' # schema sample (k of n rows; do not use for analysis):
 #' <csv header>
 #' <csv sample rows>
@@ -142,8 +143,21 @@ db_table_name <- function(prefix, args_list) {
   col_descr <- paste(
     paste(names(columns), columns), collapse = ", "
   )
+  # as.character() drops "00:00:00" from midnight values; keep the clock
+  is_time <- vapply(
+    X = df_preview, FUN = inherits, FUN.VALUE = logical(1L), what = "POSIXct"
+  )
+  df_preview[is_time] <- lapply(
+    X = df_preview[is_time], FUN = format, format = "%Y-%m-%d %H:%M:%S"
+  )
+  is_text <- vapply(
+    X = df_preview,
+    FUN = \(col) is.character(col) || is.factor(col),
+    FUN.VALUE = logical(1L)
+  )
   preview_csv <- write.csv(
-    x = df_preview, file = stdout(), row.names = FALSE
+    x = df_preview, file = stdout(), row.names = FALSE,
+    quote = which(is_text & !is_time)
   ) |>
     capture.output() |>
     paste(collapse = "\n")
@@ -161,6 +175,18 @@ db_table_name <- function(prefix, args_list) {
     divider,
     sep = "\n"
   )
+  cet_cols <- grep(pattern = "_cet$", x = names(columns), value = TRUE)
+  time_note <- if (length(cet_cols) > 0L) {
+    paste0(
+      "# time: ", sub(pattern = "_cet$", replacement = "", x = cet_cols[1L]),
+      " is UTC; ", cet_cols[1L], " is the same\n",
+      "#   instant in Central European wall-clock time (CET/CEST, DST\n",
+      "#   handled). Group by it for local days and hours; do not shift\n",
+      "#   by a fixed INTERVAL.\n"
+    )
+  } else {
+    ""
+  }
   warning_block <- if (length(multi_series_lines) > 0L) {
     paste0(
       "# WARNING: multiple series present in this table:\n",
@@ -175,6 +201,7 @@ db_table_name <- function(prefix, args_list) {
     "# rows: ", n_rows, "\n",
     "# columns: ", col_descr, "\n",
     directive, "\n",
+    time_note,
     warning_block,
     "# schema sample (", nrow(df_preview), " of ", n_rows,
     " rows; do not use for analysis):\n",
@@ -187,10 +214,12 @@ db_table_name <- function(prefix, args_list) {
 #' Detect ENTSO-E "multiple series" columns in a cached table
 #'
 #' ENTSO-E auction documents commonly ship more than one `TimeSeries` per
-#' response (e.g. day-ahead prices: Sequence 1 = binding, Sequence 2 =
-#' shadow/SDAC rerun). After `slim_ts()` constant-column pruning, columns
-#' that survive *and* have > 1 distinct value are a strong signal that the
-#' cached table contains several series stacked together. The LLM needs to
+#' response (e.g. day-ahead prices: classification sequence 1 = the SDAC
+#' price, sequence 2 = a second auction, often at another resolution; the
+#' same series can also repeat under a different `ts_mrid`). After
+#' `slim_ts()` constant-column pruning, columns that survive *and* have > 1
+#' distinct value are a strong signal that the cached table contains several
+#' series stacked together. The LLM needs to
 #' know this so it filters explicitly before aggregating.
 #'
 #' We probe a small, hand-picked candidate list (cheap `intersect()` against
@@ -208,7 +237,10 @@ db_table_name <- function(prefix, args_list) {
 #' @noRd
 .detect_multi_series <- function(con, table) {
   cols <- dbListFields(conn = con, name = table)  # nolint: object_usage_linter
+  # entsoeapi's tidy output names them ts_classification_sequence_position,
+  # ts_mrid and ts_resolution; the short names are kept for other shapes
   candidates <- c(
+    "ts_classification_sequence_position", "ts_mrid", "ts_resolution",
     "sequence", "time_series_mrid", "auction_type",
     "business_type", "process_type", "ts_business_type",
     "ts_curve_type", "constraint_ts_business_type"
@@ -223,7 +255,10 @@ db_table_name <- function(prefix, args_list) {
     vals <- dbGetQuery(  # nolint: object_usage_linter
       conn = con,
       statement = sprintf(
-        fmt = "SELECT DISTINCT %s AS v FROM %s WHERE %s IS NOT NULL LIMIT 10",
+        fmt = paste(
+          "SELECT DISTINCT %s AS v FROM %s WHERE %s IS NOT NULL",
+          "ORDER BY 1 LIMIT 10"
+        ),
         qcol, qtab, qcol
       )
     )$v
@@ -266,6 +301,13 @@ db_table_name <- function(prefix, args_list) {
 #' If there's a timestamp column and at least one numeric column, suggest a
 #' weekly aggregation. Otherwise fall back to `SELECT *`.
 #'
+#' entsoeapi's tidy frames carry identifier and period columns ahead of the
+#' measured value (`ts_mrid`, `ts_classification_sequence_position`,
+#' `ts_time_interval_start`), so the point timestamp and a measurement column
+#' (price, quantity, amount, value, rate) are preferred over column order.
+#' The Central European `_cet` twin added by `add_cet_time()` is preferred
+#' over the UTC column, so weeks are cut at local midnight.
+#'
 #' @param table Character scalar; the DuckDB table name used in the generated
 #'   SQL.
 #' @param df Data frame; used to detect timestamp and numeric columns.
@@ -289,6 +331,21 @@ db_table_name <- function(prefix, args_list) {
     },
     FUN.VALUE = logical(1L)
   )]
+  ts_col <- c(
+    grep(pattern = "point_dt_start_cet$", x = ts_col, value = TRUE),
+    grep(pattern = "point_dt_start", x = ts_col, value = TRUE),
+    ts_col
+  )
+  num_col <- num_col[!grepl(
+    pattern = "mrid|position|sequence", x = num_col, ignore.case = TRUE
+  )]
+  num_col <- c(
+    grep(
+      pattern = "price|quantity|amount|value|rate", x = num_col,
+      ignore.case = TRUE, value = TRUE
+    ),
+    num_col
+  )
   if (length(ts_col) >= 1L && length(num_col) >= 1L) {
     return(
       sprintf(
