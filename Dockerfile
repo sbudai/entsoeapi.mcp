@@ -121,11 +121,23 @@ COPY --from=builder /usr/local/lib/R /usr/local/lib/R
 RUN ln -s /usr/local/lib/R/bin/R /usr/local/bin/R \
  && ln -s /usr/local/lib/R/bin/Rscript /usr/local/bin/Rscript
 
-# Smoke test: every namespace (incl. compiled code) loads, all tools register
-RUN Rscript -e " \
+# Smoke test: every namespace (incl. compiled code) loads, and every tool
+# defined in the package is served, under a unique name, as a ToolDef that
+# survives the stdout-muting wrapper run() applies
+RUN Rscript -e ' \
       library(entsoeapi.mcp); \
       con <- DBI::dbConnect(duckdb::duckdb()); DBI::dbDisconnect(con); \
-      stopifnot(length(entsoeapi.mcp:::all_tools()) == 29L)"
+      ns <- asNamespace("entsoeapi.mcp"); \
+      is_tool <- function(x) S7::S7_inherits(x, ellmer::ToolDef); \
+      defined <- Filter(is_tool, mget(ls(ns), envir = ns)); \
+      served <- lapply(ns$all_tools(), ns$mute_stdout_tool); \
+      served_names <- vapply(served, function(x) x@name, ""); \
+      stopifnot( \
+        length(served) > 0L, \
+        all(vapply(served, is_tool, NA)), \
+        !anyDuplicated(served_names), \
+        setequal(served_names, vapply(defined, function(x) x@name, "")) \
+      )'
 
 # Drop root: a dedicated non-privileged user, with a home for the EIC cache
 RUN useradd --system --create-home --shell /usr/sbin/nologin mcp \

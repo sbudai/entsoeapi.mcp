@@ -3,6 +3,7 @@
 .claude/
 .github/
 Dockerfile
+^\.dockerignore$
 build.log
 ^\.positai$
 ^\.claude$

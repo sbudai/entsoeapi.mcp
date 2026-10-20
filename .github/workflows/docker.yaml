@@ -129,26 +129,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # RELEASE_CHECKLIST.md section 5. The server exits as soon as stdin hits
-      # EOF, so keep stdin open until the response arrives (60 s at most).
-      - name: Smoke test MCP initialize
+      # RELEASE_CHECKLIST.md section 5, plus tools/list: the server must list
+      # every tool of all_tools(), i.e. each one serializes to MCP JSON. The
+      # server exits as soon as stdin hits EOF, so keep stdin open until both
+      # responses arrive (60 s at most).
+      - name: Smoke test MCP initialize and tools/list
         env:
           IMAGE_REF: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
         run: |
-          request='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}'
+          requests=(
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}'
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+          )
           response=$(mktemp)
           # Polling the file the container writes to is the point here
           # shellcheck disable=SC2094
           {
-            echo "$request"
+            printf '%s\n' "${requests[@]}"
             for _ in $(seq 60); do
-              [ -s "$response" ] && break
+              [ "$(wc -l < "$response")" -ge 2 ] && break
               sleep 1
             done
           } | docker run --rm -i -e ENTSOE_PAT=test "$IMAGE_REF" > "$response"
-          cat "$response"
-          head -n 1 "$response" \
-            | jq -e '.id == 1 and (.result.protocolVersion | type == "string")' > /dev/null
+          head -n 1 "$response"
+          jq -c 'select(.id == 2) | [.result.tools[].name]' "$response"
+          expected=$(docker run --rm "$IMAGE_REF" \
+            Rscript -e 'cat(length(entsoeapi.mcp:::all_tools()))' 2> /dev/null)
+          echo "Tools in all_tools(): $expected"
+          jq -e -s --argjson n "$expected" '
+            (map(select(.id == 1))[0].result.protocolVersion | type == "string")
+            and (map(select(.id == 2))[0].result.tools | map(.name) as $names
+                 | ($names | length) == $n and ($names | unique | length) == $n)
+          ' "$response" > /dev/null
 
       - name: Check image runs as non-root mcp user
         env:
