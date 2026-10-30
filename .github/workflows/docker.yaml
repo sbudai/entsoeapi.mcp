@@ -170,6 +170,33 @@ jobs:
           docker run --rm "$IMAGE_REF" id
           [ "$(docker run --rm "$IMAGE_REF" id -un)" = mcp ]
 
+      # The shared-container mode of the README: a session served through
+      # docker exec answers, and the container stops itself once idle
+      - name: Smoke test shared container
+        env:
+          IMAGE_REF: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+        run: |
+          docker run -d --rm --init --name entsoeapi.mcp \
+            -e ENTSOEAPI_MCP_IDLE_TIMEOUT=20 "$IMAGE_REF" entsoeapi-mcp-idle
+          request='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}'
+          response=$(mktemp)
+          # shellcheck disable=SC2094
+          {
+            echo "$request"
+            for _ in $(seq 60); do
+              [ -s "$response" ] && break
+              sleep 1
+            done
+          } | docker exec -i -e ENTSOE_PAT=test entsoeapi.mcp \
+                Rscript -e 'entsoeapi.mcp::run()' > "$response"
+          jq -e '.result.serverInfo.name == "entsoeapi.mcp"' "$response"
+          for _ in $(seq 60); do
+            docker inspect entsoeapi.mcp > /dev/null 2>&1 || exit 0
+            sleep 1
+          done
+          echo "::error::entsoeapi.mcp did not stop after its idle timeout"
+          exit 1
+
       - name: Report image size
         run: docker images "$IMAGE"
 

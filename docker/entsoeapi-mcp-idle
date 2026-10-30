@@ -1,0 +1,30 @@
+#!/bin/sh
+# Main process of the shared entsoeapi.mcp container.
+#
+# Every MCP session runs its own server inside this container via
+#   docker exec -i entsoeapi.mcp Rscript -e "entsoeapi.mcp::run()"
+# This script only keeps the container alive while such servers run, and
+# exits once none has run for ENTSOEAPI_MCP_IDLE_TIMEOUT seconds; started with
+# --rm, the container is then removed and the next session recreates it.
+#
+# The runtime image has no procps, so the servers are found by scanning
+# /proc; the [.] keeps grep from matching its own command line.
+set -u
+
+timeout=${ENTSOEAPI_MCP_IDLE_TIMEOUT:-600}
+interval=10
+idle=0
+
+trap 'exit 0' TERM INT
+
+while [ "$idle" -lt "$timeout" ]; do
+  # sleep in the background: the trap fires during wait, not during sleep,
+  # so docker stop returns at once
+  sleep "$interval" &
+  wait $!
+  if grep -qa 'entsoeapi[.]mcp::run' /proc/[0-9]*/cmdline 2>/dev/null; then
+    idle=0
+  else
+    idle=$((idle + interval))
+  fi
+done
