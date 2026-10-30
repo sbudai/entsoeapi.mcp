@@ -106,10 +106,13 @@ FROM ubuntu:noble
 # R_UNZIPCMD: R's built-in unzip, spares installing /usr/bin/unzip.
 # ENTSOEAPI_CACHE_DIR: persistent EIC table cache; mount a volume on
 # /home/mcp/.cache to keep it across containers.
+# ENTSOEAPI_MCP_IDLE_TIMEOUT: seconds without any MCP server process after
+# which the shared container (entsoeapi-mcp-idle) stops itself.
 ENV LANG=C.UTF-8 \
     TZ=Etc/UTC \
     R_UNZIPCMD=internal \
-    ENTSOEAPI_CACHE_DIR=/home/mcp/.cache/entsoeapi
+    ENTSOEAPI_CACHE_DIR=/home/mcp/.cache/entsoeapi \
+    ENTSOEAPI_MCP_IDLE_TIMEOUT=600
 
 COPY --from=builder /runtime-deps.txt /tmp/runtime-deps.txt
 RUN apt-get update \
@@ -143,8 +146,16 @@ RUN Rscript -e ' \
 RUN useradd --system --create-home --shell /usr/sbin/nologin mcp \
  && mkdir -p "$ENTSOEAPI_CACHE_DIR" \
  && chown -R mcp:mcp /home/mcp/.cache
+
+# Keeps the shared container alive while MCP sessions run in it
+COPY --chmod=755 docker/entsoeapi-mcp-idle /usr/local/bin/entsoeapi-mcp-idle
 USER mcp
 
-# MCP uses stdin/stdout — no port needed
-# Pass ENTSOE_PAT via:  docker run -e ENTSOE_PAT=<your-token> ...
+# MCP uses stdin/stdout — no port needed. Two ways to run it:
+#   one container per session (the default CMD):
+#     docker run --rm -i --init -e ENTSOE_PAT ...
+#   one shared container, named entsoeapi.mcp, that stops itself when idle;
+#   every session runs its own server in it:
+#     docker run -d --rm --init --name entsoeapi.mcp ... entsoeapi-mcp-idle
+#     docker exec -i -e ENTSOE_PAT entsoeapi.mcp Rscript -e "entsoeapi.mcp::run()"
 CMD ["Rscript", "-e", "entsoeapi.mcp::run()"]
