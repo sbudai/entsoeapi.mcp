@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">entsoeapi.mcp</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,9 +30,14 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/sbudai/entsoeapi.mcp/blob/v0.6.1/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/sbudai/entsoeapi.mcp/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.2" id="entsoeapimcp-062">entsoeapi.mcp 0.6.2<a class="anchor" aria-label="anchor" href="#entsoeapimcp-062"></a></h2>
+<ul><li>
+<strong>One shared, named container instead of one per session</strong>: the recommended Claude Desktop config now keeps a single container named <code>entsoeapi.mcp</code> and starts each session’s MCP server inside it with <code>docker exec -i</code>, so sessions no longer pile up unnamed containers. Each session still has its own server process and DuckDB cache. The image ships <code>entsoeapi-mcp-idle</code> as the main process of that container: it stops the container <code>ENTSOEAPI_MCP_IDLE_TIMEOUT</code> seconds (default 600) after the last server ended. The per-session <code>docker run --rm -i</code> config still works, now with <code>--init</code> so that the container stops promptly.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.1" id="entsoeapimcp-061">entsoeapi.mcp 0.6.1<a class="anchor" aria-label="anchor" href="#entsoeapimcp-061"></a></h2>
 <ul><li><p><strong>The Docker image builds again</strong>: its build-time smoke test still expected 29 tools, so the image failed to build once 0.6.0 added <code>congestion_management</code>. The test no longer hard-codes a count: it checks that every tool defined in the package is served, under a unique name, as a valid tool definition. Neither 0.5.0 nor 0.6.0 reached Docker Hub, so this is the first image since 0.4.0 and carries the changes of both.</p></li>

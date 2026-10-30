@@ -1,6 +1,6 @@
 # entsoeapi.mcp
 
-![Tests](https://img.shields.io/badge/tests-133%20passing-brightgreen)![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)![Tools](https://img.shields.io/badge/tools-30-blue)![R](https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue)![License](https://img.shields.io/badge/license-MIT-blue)
+![Tests](https://img.shields.io/badge/tests-131%20passing-brightgreen)![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)![Tools](https://img.shields.io/badge/tools-30-blue)![R](https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue)![License](https://img.shields.io/badge/license-MIT-blue)
 
 An [MCP](https://modelcontextprotocol.io) server that exposes the
 [ENTSO-E Transparency Platform](https://transparency.entsoe.eu) as tools
@@ -69,14 +69,14 @@ Open (or create) your Claude Desktop config file:
 - **macOS / Linux**: `~/.config/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-Add the `entsoe` entry under `"mcpServers"`:
+Add the `entsoe` entry under `"mcpServers"` (macOS / Linux):
 
 ``` json
 {
   "mcpServers": {
     "entsoe": {
-      "command": "docker",
-      "args": ["run", "--rm", "-i", "-e", "ENTSOE_PAT", "-v", "entsoeapi-cache:/home/mcp/.cache", "sbudai/entsoeapi.mcp:latest"],
+      "command": "sh",
+      "args": ["-c", "docker start entsoeapi.mcp >/dev/null 2>&1 || docker run -d --rm --init --name entsoeapi.mcp -v entsoeapi-cache:/home/mcp/.cache sbudai/entsoeapi.mcp:latest entsoeapi-mcp-idle >/dev/null 2>&1; for i in 1 2 3 4 5 6 7 8 9 10; do docker exec entsoeapi.mcp true >/dev/null 2>&1 && break; sleep 1; done; exec docker exec -i -e ENTSOE_PAT entsoeapi.mcp Rscript -e 'entsoeapi.mcp::run()'"],
       "env": {
         "ENTSOE_PAT": "your-entsoe-api-token-here"
       }
@@ -85,16 +85,47 @@ Add the `entsoe` entry under `"mcpServers"`:
 }
 ```
 
-Key flags:
+Every Claude session (chat, Claude Code, Cowork) starts its own MCP
+server. With this entry they all share **one container, named
+`entsoeapi.mcp`**, and each session runs its own server process inside
+it, with its own DuckDB cache:
 
-- `--rm` — removes the container when the session ends (no container
-  accumulation)
-- `-i` — keeps stdin open, required for MCP stdio transport
-- `-e ENTSOE_PAT` — forwards the token from Claude Desktop into the
-  container
+- `docker start … || docker run -d …` — reuses the running
+  `entsoeapi.mcp` container, or creates it when there is none
+- `entsoeapi-mcp-idle` — the container’s main process; it stops the
+  container 10 minutes after the last session ended, and `--rm` then
+  removes it. Change the delay with
+  `-e ENTSOEAPI_MCP_IDLE_TIMEOUT=<seconds>` in the `docker run` part, or
+  stop it at once with `docker stop entsoeapi.mcp`
+- `--init` — lets the container stop promptly on `docker stop`
+- the `for` loop — waits for the container when two sessions start at
+  the same moment
+- `docker exec -i -e ENTSOE_PAT` — runs this session’s server, keeping
+  stdin open for the MCP stdio transport and forwarding the token from
+  Claude Desktop
 - `-v entsoeapi-cache:/home/mcp/.cache` — optional; keeps the downloaded
   EIC code tables in a named volume for a day, so the EIC lookup tools
   answer instantly in later sessions instead of re-downloading them
+
+On Windows, or without `sh`, start one container per session instead;
+`--rm` removes it when the session ends:
+
+``` json
+"entsoe": {
+  "command": "docker",
+  "args": ["run", "--rm", "-i", "--init", "-e", "ENTSOE_PAT", "-v", "entsoeapi-cache:/home/mcp/.cache", "sbudai/entsoeapi.mcp:latest"],
+  "env": {
+    "ENTSOE_PAT": "your-entsoe-api-token-here"
+  }
+}
+```
+
+When switching from the per-session setup to the shared container, quit
+Claude Desktop and remove the leftover unnamed containers once:
+
+``` bash
+docker ps -q --filter ancestor=sbudai/entsoeapi.mcp:latest | xargs -r docker rm -f
+```
 
 ### Step 4 — Restart Claude Desktop and verify
 
@@ -269,9 +300,9 @@ first,
 e.g. `WHERE ts_classification_sequence_position = 1 AND ts_mrid = 2`,
 then group by `ts_point_dt_start_cet`.
 
-The cache lives for the lifetime of one Claude Desktop session (the
-`docker run --rm -i` container). Identical queries within a session
-reuse the same table — no second API hit.
+The cache lives for the lifetime of one Claude session (its own MCP
+server process). Identical queries within a session reuse the same table
+— no second API hit.
 
 The database is sandboxed: SQL cannot read or write files, reach the
 network, install extensions, or change settings, and its memory is
@@ -401,7 +432,7 @@ non-root `mcp` user. Override the R version with
 
 ## Testing
 
-The package ships with **133 unit tests** that exercise every tool
+The package ships with **131 unit tests** that exercise every tool
 wrapper, every dispatch branch, and every utility — yielding **99% line
 coverage** across `R/run.R`, `R/tools.R`, and `R/utils.R`.
 
@@ -447,7 +478,7 @@ entsoeapi.mcp/
 |   ├── testthat.R        # Test framework helper
 |   └── testthat
 |       ├── test-run.R    # Unit tests of run.R (16 tests)
-|       ├── test-tools.R  # Unit tests of tools.R (62 tests)
+|       ├── test-tools.R  # Unit tests of tools.R (60 tests)
 |       ├── test-utils.R  # Unit tests of utils.R (20 tests)
 |       └── test-db.R     # Unit tests of db.R (35 tests)
 ├── inst

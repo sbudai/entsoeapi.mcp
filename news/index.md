@@ -1,5 +1,18 @@
 # Changelog
 
+## entsoeapi.mcp 0.6.2
+
+- **One shared, named container instead of one per session**: the
+  recommended Claude Desktop config now keeps a single container named
+  `entsoeapi.mcp` and starts each session’s MCP server inside it with
+  `docker exec -i`, so sessions no longer pile up unnamed containers.
+  Each session still has its own server process and DuckDB cache. The
+  image ships `entsoeapi-mcp-idle` as the main process of that
+  container: it stops the container `ENTSOEAPI_MCP_IDLE_TIMEOUT` seconds
+  (default 600) after the last server ended. The per-session
+  `docker run --rm -i` config still works, now with `--init` so that the
+  container stops promptly.
+
 ## entsoeapi.mcp 0.6.1
 
 - **The Docker image builds again**: its build-time smoke test still
