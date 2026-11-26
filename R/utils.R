@@ -58,7 +58,12 @@ slim_ts <- function(
   df,
   keep_pattern = paste(
     "eic", "name", "start", "end", "position", "price",
-    "quantity", "amount", "value", "rate", "type", sep = "|"
+    "quantity", "amount", "value", "rate", "type",
+    # unit identifiers: the plant (registered resource / production unit) and
+    # generator (psr) EICs are constant in a single-plant result, but they are
+    # the keys the caller needs, so they must survive the pruning
+    "(resource|production|psr)_mrid",
+    sep = "|"
   )
 ) {
   if (!is.data.frame(df) || nrow(df) == 0L) return(df)
