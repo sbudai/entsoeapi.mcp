@@ -1,7 +1,7 @@
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **entsoeapi.mcp** (112 symbols,
-100 relationships, 0 execution flows). Use the GitNexus MCP tools to
+This project is indexed by GitNexus as **entsoeapi.mcp** (128 symbols,
+113 relationships, 0 execution flows). Use the GitNexus MCP tools to
 understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project

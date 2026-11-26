@@ -1,5 +1,22 @@
 # Changelog
 
+## entsoeapi.mcp 0.6.3
+
+- **Unit EICs survive result slimming**: `slim_ts()` now keeps the
+  `*_resource_mrid`, `*_production_mrid` and `*_psr_mrid` columns even
+  when they are constant, as in a single-plant result. They identify the
+  plant and generator the caller asked about, so pruning them lost the
+  key of the answer. The time series `ts_mrid` is still dropped.
+- **Setup guides for more MCP clients**: the README has a new “Other MCP
+  clients” section covering Claude Code, Codex (CLI, IDE extension and
+  desktop app) and ChatGPT Desktop. ChatGPT only connects to remote
+  HTTPS servers, so that guide describes an authenticated stdio-to-HTTP
+  bridge.
+- **Upgrading section**: the README now explains how to upgrade,
+  including that a running shared `entsoeapi.mcp` container must be
+  stopped (`docker stop entsoeapi.mcp`) before it picks up a newly
+  pulled image.
+
 ## entsoeapi.mcp 0.6.2
 
 - **One shared, named container instead of one per session**: the
