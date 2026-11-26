@@ -73,6 +73,30 @@ testthat::test_that(
 )
 
 testthat::test_that(
+  desc = "slim_ts() keeps constant unit EICs (plant and generator mrid)",
+  code = {
+    df <- data.frame(
+      ts_registered_resource_mrid = rep("46WPU0000000062N", 3),
+      ts_production_mrid = rep("11W0-0000-0708-1", 3),
+      ts_production_psr_mrid = rep("11W0-0000-0245-J", 3),
+      ts_mkt_psr_type_psr_mrid = rep("46WGU0000000001C", 3),
+      ts_mrid = rep("abc", 3),  # time series id: constant, still dropped
+      ts_point_quantity = c(1, 2, 3)
+    )
+    result <- entsoeapi.mcp:::slim_ts(df = df)
+    testthat::expect_true(
+      object = all(
+        c(
+          "ts_registered_resource_mrid", "ts_production_mrid",
+          "ts_production_psr_mrid", "ts_mkt_psr_type_psr_mrid"
+        ) %in% names(result)
+      )
+    )
+    testthat::expect_false(object = "ts_mrid" %in% names(result))
+  }
+)
+
+testthat::test_that(
   desc = "slim_ts() returns empty data frame unchanged",
   code = {
     df <- data.frame(a = integer(0), b = character(0))

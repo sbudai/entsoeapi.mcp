@@ -40,7 +40,7 @@ cov_pct <- round(covr::percent_coverage(covr::package_coverage(path = ".")))
 
 <!-- badges: start -->
 
-![Tests](https://img.shields.io/badge/tests-`r n_tests_total`%20passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-`r cov_pct`%25-brightgreen) ![Tools](https://img.shields.io/badge/tools-`r n_tools`-blue) ![R](https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue) ![License](https://img.shields.io/badge/license-MIT-blue)
+![Tests](https://img.shields.io/badge/tests-%60r%20n_tests_total%60%20passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-%60r%20cov_pct%60%25-brightgreen) ![Tools](https://img.shields.io/badge/tools-%60r%20n_tools%60-blue) ![R](https://img.shields.io/badge/R-%E2%89%A5%204.2.0-blue) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 <!-- badges: end -->
 
@@ -68,7 +68,7 @@ Large time-series results are cached in an in-process **DuckDB** inside the cont
 | Requirement | Purpose | Notes |
 |----|----|----|
 | [Docker](https://docs.docker.com/get-docker/) | Runs the server container | Any version that supports `docker run`. |
-| [Claude Desktop](https://claude.com/download) | MCP client | or any MCP-compatible client |
+| [Claude Desktop](https://claude.com/download) | MCP client | Claude Desktop, Claude Code, Codex, or any MCP client that can run a local command (see [Other MCP clients](#other-mcp-clients)) |
 | [ENTSO-E API token](https://transparency.entsoe.eu/usrm/user/createPublicUser) | Access to the Transparency Platform | Free registration; UUID v4 format. |
 
 ------------------------------------------------------------------------
@@ -148,6 +148,86 @@ Test with a simple query:
 > *"What is the EIC code for Germany?"*
 
 Claude should call the `area_eic` tool and return a list of German bidding zones and control areas.
+
+### Other MCP clients {#other-mcp-clients}
+
+The server speaks MCP over **stdio**, so any client that can launch a local command works. Do Steps 1–2 first; only the client-side registration differs.
+
+#### Claude Code
+
+Register the server once for all your projects (`--scope user`), using the simple one-container-per-session form:
+
+``` bash
+claude mcp add entsoe --scope user \
+  -e ENTSOE_PAT=your-entsoe-api-token-here \
+  -- docker run --rm -i --init -e ENTSOE_PAT \
+     -v entsoeapi-cache:/home/mcp/.cache sbudai/entsoeapi.mcp:latest
+```
+
+To use the shared `entsoeapi.mcp` container from Step 3 instead, paste that same `"entsoe"` entry into a `.mcp.json` file in your project root (or into `~/.claude.json` under `"mcpServers"`). Then check it with:
+
+``` bash
+claude mcp list
+```
+
+Inside a session, `/mcp` shows the connection status. Use `--scope project` to write the entry to `.mcp.json` and share it with your team (keep the token out of the committed file, e.g. with `"ENTSOE_PAT": "${ENTSOE_PAT}"`).
+
+#### Codex (CLI, IDE extension and desktop app)
+
+Codex keeps MCP servers in `~/.codex/config.toml`, shared by all its front-ends. Either use the CLI:
+
+``` bash
+codex mcp add entsoe \
+  --env ENTSOE_PAT=your-entsoe-api-token-here \
+  -- docker run --rm -i --init -e ENTSOE_PAT \
+     -v entsoeapi-cache:/home/mcp/.cache sbudai/entsoeapi.mcp:latest
+```
+
+or edit the file directly (this variant uses the shared container):
+
+``` toml
+[mcp_servers.entsoe]
+command = "sh"
+args = ["-c", "docker start entsoeapi.mcp >/dev/null 2>&1 || docker run -d --rm --init --name entsoeapi.mcp -v entsoeapi-cache:/home/mcp/.cache sbudai/entsoeapi.mcp:latest entsoeapi-mcp-idle >/dev/null 2>&1; for i in 1 2 3 4 5 6 7 8 9 10; do docker exec entsoeapi.mcp true >/dev/null 2>&1 && break; sleep 1; done; exec docker exec -i -e ENTSOE_PAT entsoeapi.mcp Rscript -e 'entsoeapi.mcp::run()'"]
+env = { ENTSOE_PAT = "your-entsoe-api-token-here" }
+startup_timeout_sec = 30
+```
+
+`startup_timeout_sec` leaves room for the first container start. Run `codex mcp list` (or `/mcp` in the Codex TUI) to verify.
+
+#### ChatGPT Desktop
+
+ChatGPT cannot launch a local stdio server: it only connects to **remote MCP servers reachable over HTTPS** (a custom connector, which needs Developer mode and a plan that offers it). To use this server there you have to put an HTTP bridge in front of it, for example a stdio-to-Streamable-HTTP proxy such as `mcp-proxy` or `supergateway` running the same `docker run --rm -i --init -e ENTSOE_PAT … sbudai/entsoeapi.mcp:latest` command, published through an HTTPS tunnel or reverse proxy. Then in ChatGPT open **Settings → Connectors → Advanced → Developer mode**, create a connector and enter the public URL of the bridge.
+
+> This route is not tested by the project, and the menu names change between ChatGPT releases. The bridge exposes a server that spends *your* ENTSO-E token, so protect it with authentication and never publish it unauthenticated. If you only need a desktop client, Claude Desktop, Claude Code or Codex above are the zero-bridge options.
+
+------------------------------------------------------------------------
+
+## Upgrading
+
+The client configuration does not change between versions, only the image behind it does. Check what is new in [NEWS.md](NEWS.md), then:
+
+``` bash
+docker pull sbudai/entsoeapi.mcp:latest
+```
+
+- **Shared container** (the recommended Step 3 entry, also used by the Codex `config.toml` block): a running `entsoeapi.mcp` container keeps using the *old* image, and new sessions attach to it. Stop it so that the next session recreates it from the new image:
+
+  ``` bash
+  docker stop entsoeapi.mcp
+  ```
+
+  It also stops by itself 10 minutes after the last session ended.
+
+- **One container per session** (the `docker run --rm -i` entries): nothing more to do, the next session starts from the new image.
+
+- **Native R**: reinstall the package, e.g. `git pull` in your clone, then `R CMD INSTALL /path/to/entsoeapi.mcp`.
+
+Then restart your client, or start a new session, so it launches the server again; the config files and your token stay as they are. To check which version you got:
+
+``` bash
+docker run --rm sbudai/entsoeapi.mcp:latest Rscript -e 'cat(as.character(packageVersion("entsoeapi.mcp")))'
+```
 
 ------------------------------------------------------------------------
 
@@ -258,7 +338,7 @@ One tool (`congestion_management`) with a `type` parameter:
 
 Every time-series tool inserts its full result into an in-memory DuckDB table and returns an envelope. The envelope tells Claude — in every call — that statistics must be computed via `sql_query`, never from the schema sample, and warns when several `TimeSeries` are stacked together in one cached table. This is the real envelope for Austrian day-ahead prices on 12 October 2026: one day of 15-minute prices, but 288 rows, because the document holds classification sequence 2, sequence 1, and sequence 1 again under a third `ts_mrid`:
 
-```
+```         
 # table: energy_prices_2c603b
 # rows: 288
 # columns: ts_in_domain_name VARCHAR, ts_out_domain_name VARCHAR, type VARCHAR, type_def VARCHAR, market_agreement_type VARCHAR, market_agreement_type_def VARCHAR, ts_auction_type VARCHAR, ts_auction_type_def VARCHAR, ts_business_type VARCHAR, ts_business_type_def VARCHAR, ts_time_interval_start TIMESTAMP, ts_time_interval_end TIMESTAMP, ts_mrid DOUBLE, ts_point_dt_start TIMESTAMP, ts_point_dt_start_cet TIMESTAMP, ts_point_price_amount DOUBLE, ts_currency_unit_name VARCHAR, ts_price_measure_unit_name VARCHAR, ts_classification_sequence_position DOUBLE
